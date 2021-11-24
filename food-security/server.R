@@ -19,6 +19,17 @@ createBarPlot <- function(group, data){
     print(barPlot)
 }
 
+createOtherPlot <- function(group, data){
+    otherPlot <- data %>% 
+        summarize(n = n()) %>% 
+        mutate(perc = 100*n/sum(n)) %>% 
+        ggplot(aes(x = eval(parse(text = group)), y = perc)) +
+        geom_bar(stat = "identity") +
+        facet_grid(~ foodSecurity) + 
+        coord_flip()
+    print(otherPlot)
+}
+
 # Define server logic required to draw a histogram
 shinyServer(function(input, output, session) {
 
@@ -73,6 +84,13 @@ shinyServer(function(input, output, session) {
                                       eval(parse(text = input$contingencyVar2))))
     })
     
+    output$descripStat <- renderPrint({
+        if(input$descripStatVariable == "Age")
+            summary(foodSecurity$age)
+        else if(input$descripStatVariable == "Number of Household Members")
+            summary(foodSecurity$numHHMembers)
+    })
+    
     output$barPlot <- renderPlot({
         if(input$summaryType == "Graphical"){
             if(input$plotType == "Bar Plot"){
@@ -100,6 +118,85 @@ shinyServer(function(input, output, session) {
                 if(input$barPlotVariable == "Household Recieved SNAP Benefits"){
                     createBarPlot("receivedSNAP", foodSecurity)
                 }
+            }
+        }
+    })
+    
+    output$otherPlot <- renderPlot({
+        if(input$summaryType == "Graphical"){
+            if(input$plotType == "Other Plot"){
+                if(input$otherPlotVariable == "Sex"){
+                    foodSecurity %>% group_by(sex, foodSecurity) %>%
+                        summarize(n = n()) %>% 
+                        mutate(perc = 100*n/sum(n)) %>% 
+                        ggplot(aes(x = sex, y = perc)) +
+                        geom_bar(stat = "identity") +
+                        facet_grid(~ foodSecurity) + 
+                        coord_flip()
+                } else {
+                if(input$otherPlotVariable == "Race"){
+                    foodSecurity %>% group_by(race, foodSecurity) %>%
+                        summarize(n = n()) %>% 
+                        mutate(perc = 100*n/sum(n)) %>% 
+                        ggplot(aes(x = race, y = perc)) +
+                        geom_bar(stat = "identity") +
+                        facet_grid(~ foodSecurity) + 
+                        coord_flip()
+                } else {
+                if(input$otherPlotVariable == "Type of Household"){
+                    foodSecurity %>% group_by(typeHH, foodSecurity) %>%
+                        summarize(n = n()) %>% 
+                        mutate(perc = 100*n/sum(n)) %>% 
+                        ggplot(aes(x = typeHH, y = perc)) +
+                        geom_bar(stat = "identity") +
+                        facet_grid(~ foodSecurity) + 
+                        coord_flip()
+                } else {
+                if(input$otherPlotVariable == "Annual Household Income"){
+                    foodSecurity %>% group_by(annualHHIncome, foodSecurity) %>%
+                        summarize(n = n()) %>% 
+                        mutate(perc = 100*n/sum(n)) %>% 
+                        ggplot(aes(x = annualHHIncome, y = perc)) +
+                        geom_bar(stat = "identity") +
+                        facet_grid(~ foodSecurity) + 
+                        coord_flip()
+                } else {
+                if(input$otherPlotVariable == "Marital Status"){
+                    foodSecurity %>% group_by(maritalStatus, foodSecurity) %>%
+                        summarize(n = n()) %>% 
+                        mutate(perc = 100*n/sum(n)) %>% 
+                        ggplot(aes(x = maritalStatus, y = perc)) +
+                        geom_bar(stat = "identity") +
+                        facet_grid(~ foodSecurity) + 
+                        coord_flip()
+                } else {
+                if(input$otherPlotVariable == "Living Quarters"){
+                    foodSecurity %>% group_by(livingQuarters, foodSecurity) %>%
+                        summarize(n = n()) %>% 
+                        mutate(perc = 100*n/sum(n)) %>% 
+                        ggplot(aes(x = livingQuarters, y = perc)) +
+                        geom_bar(stat = "identity") +
+                        facet_grid(~ foodSecurity) + 
+                        coord_flip()
+                } else {
+                if(input$otherPlotVariable == "Education Level"){
+                    foodSecurity %>% group_by(educationLevel, foodSecurity) %>%
+                        summarize(n = n()) %>% 
+                        mutate(perc = 100*n/sum(n)) %>% 
+                        ggplot(aes(x = educationLevel, y = perc)) +
+                        geom_bar(stat = "identity") +
+                        facet_grid(~ foodSecurity) + 
+                        coord_flip()
+                } else {
+                if(input$otherPlotVariable == "Household Recieved SNAP Benefits"){
+                    foodSecurity %>% group_by(receivedSNAP, foodSecurity) %>%
+                        summarize(n = n()) %>% 
+                        mutate(perc = 100*n/sum(n)) %>% 
+                        ggplot(aes(x = receivedSNAP, y = perc)) +
+                        geom_bar(stat = "identity") +
+                        facet_grid(~ foodSecurity) + 
+                        coord_flip()
+                }}}}}}}}
             }
         }
     })

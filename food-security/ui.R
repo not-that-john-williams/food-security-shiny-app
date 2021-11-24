@@ -97,7 +97,17 @@ shinyUI(navbarPage(
                                                 "Household Recieved SNAP Benefits")
                         )
                     ),
-                    conditionalPanel(condition = "plotType == 'Other Plot'"
+                    conditionalPanel(condition = "input.plotType == 'Other Plot'",
+                        selectInput("otherPlotVariable",
+                            label = "Select a group variable:",
+                            choices = c("Sex", "Race",
+                                        "Type of Household",
+                                        "Annual Household Income",
+                                        "Marital Status",
+                                        "Living Quarters",
+                                        "Education Level",
+                                        "Household Recieved SNAP Benefits")
+                        )
                     )
                 )
             ),
@@ -109,10 +119,18 @@ shinyUI(navbarPage(
                     ),
                     conditionalPanel(condition = "input.numericalType == 'Contingency Tables'",
                         verbatimTextOutput("contingencyTable")
+                    ),
+                    conditionalPanel(condition = "input.numericalType == 'Descriptive Statistics'",
+                        verbatimTextOutput("descripStat")
                     )
                 ),
                 conditionalPanel(condition = "input.summaryType == 'Graphical'",
-                    plotOutput("barPlot")
+                    conditionalPanel(condition = "input.plotType == 'Bar Plot'",
+                        plotOutput("barPlot")
+                    ),
+                    conditionalPanel(condition = "input.plotType == 'Other Plot'",
+                        plotOutput("otherPlot")
+                    )
                 )
             )
         ),
