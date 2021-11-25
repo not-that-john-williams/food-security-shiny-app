@@ -126,6 +126,9 @@ shinyServer(function(input, output, session) {
         if(input$summaryType == "Graphical"){
             if(input$plotType == "Other Plot"){
                 if(input$otherPlotVariable == "Sex"){
+                    # Attempted to use a function to create this plot, but 
+                    # `eval(parse(text = "..."))` wasn't compatible with 
+                    # `group_by()`.  More research needed.
                     foodSecurity %>% group_by(sex, foodSecurity) %>%
                         summarize(n = n()) %>% 
                         mutate(perc = 100*n/sum(n)) %>% 
