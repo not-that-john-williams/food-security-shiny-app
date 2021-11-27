@@ -1,10 +1,17 @@
 library(tidyverse)
 library(censusapi)
 
+# Add key to .Renviron
+Sys.setenv(CENSUS_KEY="7ba991f2b52a05808dd84b9e20d650cc35f11a9a")
+# Reload .Renviron
+readRenviron("~/.Renviron")
+# Check to see that the expected key is output in your R console
+Sys.getenv("CENSUS_KEY")
+
 cps_foodsec <- getCensus(
   name = "2020/cps/foodsec/dec",
-  vars = c("PESEX", "PTDTRACE", "PRTAGE", "HRHTYPE", "HRNUMHOU", "HEFAMINC", 
-           "PRMARSTA", "HEHOUSUT", "PEEDUCA", "HESP1", "HRFS12MD"))
+  vars = c("HRFS12MD", "PESEX", "PTDTRACE", "PRTAGE", "HRHTYPE", "HRNUMHOU", 
+           "HEFAMINC", "PRMARSTA", "HEHOUSUT", "PEEDUCA", "HESP1"))
 cps_foodsec
 
 sex_levels <- c("1", "2")
@@ -22,16 +29,15 @@ race_labels <- c("White", "Black", "American Indian, Alaskan Native", "Asian",
                  "Other 4 and 5 Race Combinations")
 
 typeHH_levels <- c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0, -1)
-typeHH_labels <- c("Husband/Wife Primary Family(neither AF)",
-                   "Husb/Wife Prim. Family(either/Both AF)",
-                   "Unmarried Civilian Male-Prim Fam Hhlder",
-                   "Unmarried Civ. Female-Prim Fam Hhlder",
-                   "Primary Family Hhlder-Rp In AF,unmar.",
+typeHH_labels <- c("Married Civilian Family", "Married Non-Civilian Family",
+                   "Unmarried Civ. Male-Primary Family",
+                   "Unmarried Civ. Female-Primary Family",
+                   "Unmarried Non-Civilian Family",
                    "Civilian Male Primary Individual",
                    "Civilian Female Primary Individual",
-                   "Primary Individual Hhld-Rp In AF",
+                   "Non-Civilian Primary Individual",
                    "Group Quarters With Family",
-                   "Grp Quarters Without Family",
+                   "Group Quarters Without Family",
                    "Non-Interview Household",
                    "In Universe, Met No Conditions To Assign")
 
@@ -93,7 +99,8 @@ foodSecurity_labels <- c("High", "Marginal", "Low", "Very Low",
                          "No Response", "No Response", "No Response")
 
 foodSecurity <- cps_foodsec %>% 
-                rename(sex = PESEX,
+                rename(foodSecurity = HRFS12MD,
+                       sex = PESEX,
                        race = PTDTRACE,
                        age = PRTAGE,
                        typeHH = HRHTYPE,
@@ -102,9 +109,11 @@ foodSecurity <- cps_foodsec %>%
                        maritalStatus = PRMARSTA,
                        livingQuarters = HEHOUSUT,
                        educationLevel = PEEDUCA,
-                       receivedSNAP = HESP1,
-                       foodSecurity = HRFS12MD) %>%
-                mutate(sex = factor(sex,
+                       receivedSNAP = HESP1) %>%
+                mutate(foodSecurity = factor(foodSecurity,
+                                             levels = foodSecurity_levels,
+                                             labels = foodSecurity_labels),
+                       sex = factor(sex,
                                     levels = sex_levels,
                                     labels = sex_labels),
                        race = factor(race,
@@ -129,10 +138,71 @@ foodSecurity <- cps_foodsec %>%
                                                labels = educationLevel_labels),
                        receivedSNAP = factor(receivedSNAP,
                                              levels = receivedSNAP_levels,
-                                             labels = receivedSNAP_labels),
-                       foodSecurity = factor(foodSecurity,
-                                             levels = foodSecurity_levels,
-                                             labels = foodSecurity_labels))
+                                             labels = receivedSNAP_labels))
+
+# Reduce the number of factors of `race` by combining all 3 or more race 
+# combinations together.
+levels(foodSecurity$race) <- c("White", "Black", "American Indian, Alaskan Native",
+                               "Asian", "Hawaiian/Pacific Islander", "White-Black",
+                               "White-AI", "White-Asian", "White-HP", "Black-AI", 
+                               "Black-Asian", "Black-HP", "AI-Asian", "AI-HP",
+                               "Asian-HP", "Three or More Race Combinations",
+                               "Three or More Race Combinations",
+                               "Three or More Race Combinations",
+                               "Three or More Race Combinations",
+                               "Three or More Race Combinations",
+                               "Three or More Race Combinations",
+                               "Three or More Race Combinations",
+                               "Three or More Race Combinations",
+                               "Three or More Race Combinations",
+                               "Three or More Race Combinations",
+                               "Three or More Race Combinations")
+
+# Reduce the number of factors of `maritalStatus` by combining civilian and 
+# non-civilian married.
+levels(foodSecurity$maritalStatus) <- c("Married", "Married",
+                                        "Married, Spouse Absent", "Widowed",
+                                        "Divorced", "Separated", "Never Married",
+                                        "Met No Conditions To Assign")
+
+# Reduce the number of factors of `livingQuarters`
+levels(foodSecurity$livingQuarters) <- c("NA", "House, Apartment, Flat", 
+                                         "Hotel, Motel, Rooming House",
+                                         "Hotel, Motel, Rooming House",
+                                         "Hotel, Motel, Rooming House",
+                                         "Mobile Home or Trailer",
+                                         "Mobile Home or Trailer",
+                                         "Other", "Other", "Other", "Other",
+                                         "Other", "Other", "Other")
+
+# Reduce the number of factors of `educationLevel` by combining all factors less
+# than 7th grade.
+levels(foodSecurity$educationLevel) <- c(c("Less Than 7th Grade", 
+                                           "Less Than 7th Grade",
+                                           "Less Than 7th Grade", 
+                                           "7th Or 8th Grade", "9th Grade",
+                                           "10th Grade", "11th Grade", 
+                                           "12th Grade No Diploma",
+                                           "High School Grad-Diploma or GED",
+                                           "Some College-No Degree",
+                                           "Associate Degree-Occupational/Vocational",
+                                           "Associate Degree-Academic Program",
+                                           "Bachelor's Degree", "Master's Degree",
+                                           "Professional School Degree",
+                                           "Doctorate Degree", "Not in Universe"))
+
+# Drop unused factors of variables
+foodSecurity$typeHH <- droplevels(foodSecurity$typeHH)
+foodSecurity$annualHHIncome <- droplevels(foodSecurity$annualHHIncome)
+#foodSecurity$livingQuarters <- droplevels(foodSecurity$livingQuarters)
+
+#predictors <- names(foodSecurity)[-1]
+predictors <- c("Sex", "Race", "Age", "Type of Household", 
+                "# of Household Members", "Annual Household Income",
+                "Marital Status", "Living Quarters",
+                "Highest Education Level Attained",
+                "Did Household Receive SNAP Benefits?")
+response <- "Food Security Level"
 
 group <- foodSecurity$sex
 x <- foodSecurity$foodSecurity
