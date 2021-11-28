@@ -4,6 +4,8 @@ library(ggplot2)
 library(summarytools)
 library(DT)
 library(caret)
+library(rpart)
+library(rattle)
 
 shinyUI(navbarPage(
     
@@ -179,7 +181,7 @@ shinyUI(navbarPage(
                         h3("Step 2: Choose Predictors"
                         ),
                         checkboxGroupInput("multiModelVars", 
-                            label = "Select one or more variables to inclide as predictors in the model",
+                            label = "Select one or more variables to include as predictors in the model",
                             choices = names(foodSecurity)[-1]
                         ),
                         h3("Step 3: Select Fit Options"
@@ -195,26 +197,56 @@ shinyUI(navbarPage(
                         actionButton("runMLM", label = "Create Model")
                     ),
                     conditionalPanel(condition = "input.modelType == 'Classification Tree'",
-                        h3("Step 2: Partition the Data"
+                        h3("Step 2: Choose Predictors"
+                        ),
+                        checkboxGroupInput("classTreeVars", 
+                            label = "Select one or more variables to include as predictors in the model",
+                            choices = names(foodSecurity)[-1]
+                        ),
+                        h3("Step 3: Select Fit Options"
                         ),
                         sliderInput("splitPercent", 
                             label = "Choose the percent of data used to train your models:",
                             min = 50, max = 90, value = 70, post = "%"
-                        )
+                        ),
+                        sliderInput("numFolds", 
+                            label = "Choose the number of folds to use in cross validation:",
+                            min = 2, max = 10, value = 5
+                        ),
+                        actionButton("runClassTree", label = "Create Model")
                     ),
                     conditionalPanel(condition = "input.modelType == 'Random Forest'",
-                                     h3("Step 2: Partition the Data"),
-                                     sliderInput("splitPercent", 
-                                                 label = "Choose the percent of data used to train your models:",
-                                                 min = 50, max = 90, value = 70, post = "%"
-                                     )
+                        h3("Step 2: Choose Predictors"
+                        ),
+                        checkboxGroupInput("forestVars", 
+                            label = "Select one or more variables to include as predictors in the model",
+                            choices = names(foodSecurity)[-1]
+                        ),
+                        h3("Step 3: Select Fit Options"
+                        ),
+                        sliderInput("splitPercent", 
+                            label = "Choose the percent of data used to train your models:",
+                            min = 50, max = 90, value = 70, post = "%"
+                        ),
+                        sliderInput("numFolds", 
+                            label = "Choose the number of folds to use in cross validation:",
+                            min = 2, max = 10, value = 5
+                        ),
+                        actionButton("runForest", label = "Create Model")
                     )
                 ),
                 
                 mainPanel(fluidPage(
                     conditionalPanel(condition = "input.modelType == 'Multinomial Logistic Regression'",
                         verbatimTextOutput("summaryMulti")
+                    ),
+                    conditionalPanel(condition = "input.modelType == 'Classification Tree'",
+                        plotOutput("summaryClassTree")
+                    ),
+                    conditionalPanel(condition = "input.modelType == 'Random Forest'",
+                        plotOutput("summaryForest")
                     )
+                    
                     # Split data into a training and test set, giving the user the 
                     # ability to choose the proportion of data used in each.
                     # User should have functionality for choosing model settings

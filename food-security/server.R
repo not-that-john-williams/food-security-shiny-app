@@ -6,6 +6,9 @@ library(DT)
 library(gmodels)
 library(caret)
 library(nnet)
+library(rpart)
+library(rattle)
+library(ranger)
 
 createBarPlot <- function(group, data){
     barPlot <- data %>% 
@@ -217,22 +220,105 @@ shinyServer(function(input, output, session) {
             progress$set(message = "Calculation in progress",
                          detail = "This may take a while...")
             
+            # Remove "No Response" from `foodSecurity`
+            data <- foodSecurity %>% filter(foodSecurity != "No Response")
+            
             vars <- unlist(input$multiModelVars)
-            trainIndex <- createDataPartition(foodSecurity$foodSecurity,
+            trainIndex <- createDataPartition(data$foodSecurity,
                                             p = input$splitPercent/100, 
                                             list = FALSE, 
                                             times = 1)
-            trainData <- foodSecurity[ trainIndex,]
-            testData  <- foodSecurity[-trainIndex,]
-            fit <- train(foodSecurity ~ ., data = trainData[,c(c("foodSecurity"), vars)],
-                         method = 'multinom',
-                         trControl = trainControl(method = "cv", 
-                                                  number = input$numFolds),
-                         # Do not print output from the cross validation
-                         trace = FALSE,
-                         # Exclude any observations with missing data
-                         na.action = na.exclude)
-            summary(fit)
+            trainData <- data[ trainIndex,]
+            testData  <- data[-trainIndex,]
+            multinomFit <- train(foodSecurity ~ ., 
+                                 data = trainData[,c(c("foodSecurity"), vars)],
+                                 method = 'multinom',
+                                 trControl = trainControl(method = "cv", 
+                                                          number = input$numFolds),
+                                 # Do not print output from the cross validation
+                                 trace = FALSE,
+                                 # Exclude any observations with missing data
+                                 na.action = na.exclude)
+            summary(multinomFit)
+        })
+    })
+    
+    observeEvent(input$runClassTree, {
+        output$summaryClassTree <- renderPlot({
+            
+            # Create a Progress object
+            progress <- Progress$new()
+            # Make sure it closes when we exit this reactive, even if there's an error.
+            on.exit(progress$close())
+            # Set the message to the user while cross-validation is running.
+            progress$set(message = "Calculation in progress",
+                         detail = "This may take a while...")
+            
+            # Remove "No Response" from `foodSecurity`
+            data <- foodSecurity %>% filter(foodSecurity != "No Response")
+            data$foodSecurity <- droplevels(data$foodSecurity)
+            
+            vars <- unlist(input$classTreeVars)
+            trainIndex <- createDataPartition(data$foodSecurity,
+                                              p = input$splitPercent/100, 
+                                              list = FALSE, 
+                                              times = 1)
+            trainData <- data[ trainIndex,]
+            testData  <- data[-trainIndex,]
+            treeFit <- train(foodSecurity ~ ., 
+                             data = trainData[,c(c("foodSecurity"), vars)],
+                             method = 'rpart',
+                             trControl = trainControl(method = "cv", 
+                                                      number = input$numFolds),
+                             tuneGrid = expand.grid(cp = seq(0, 0.1, by = 0.0001)),
+                             # Exclude any observations with missing data
+                             na.action = na.exclude)
+            rattle::fancyRpartPlot(treeFit$finalModel, tweak = 2)
+        })
+    })
+    
+    observeEvent(input$runForest, {
+        output$summaryForest <- renderPlot({
+            
+            # Create a Progress object
+            progress <- Progress$new()
+            # Make sure it closes when we exit this reactive, even if there's an error.
+            on.exit(progress$close())
+            # Set the message to the user while cross-validation is running.
+            progress$set(message = "Calculation in progress",
+                         detail = "This may take a while...")
+            
+            # Remove "No Response" from `foodSecurity`
+            data <- foodSecurity %>% filter(foodSecurity != "No Response")
+            data$foodSecurity <- droplevels(data$foodSecurity)
+            
+            vars <- unlist(input$forestVars)
+            trainIndex <- createDataPartition(data$foodSecurity,
+                                              p = input$splitPercent/100, 
+                                              list = FALSE, 
+                                              times = 1)
+            trainData <- data[ trainIndex,]
+            testData  <- data[-trainIndex,]
+            forestFit <- train(foodSecurity ~ ., 
+                             data = trainData[,c(c("foodSecurity"), vars)],
+                             method = 'ranger',
+                             # Needed to retrieve variable importance 
+                             importance = "permutation",
+                             trControl = trainControl(method = "cv", 
+                                                      number = input$numFolds),
+                             #tuneGrid = expand.grid(mtry = c(1:15)),
+                             # Do not print output from the cross validation
+                             # Exclude any observations with missing data
+                             na.action = na.exclude)
+            temp <- varImp(forestFit)
+            importance <- as_tibble(temp$importance, rownames = "variable")
+            importance <- importance %>% arrange(desc(Overall))
+            ggplot(importance[1:20,], aes(x = reorder(variable, Overall), 
+                                          y = Overall, fill = Overall)) +
+                geom_col() + coord_flip() + theme(legend.position = "none") +
+                labs(x = "Predictors",  
+                     y = "Importance %", 
+                     title ="Importance of Top 20 Predictors")
         })
     })
     
