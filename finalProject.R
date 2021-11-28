@@ -10,9 +10,43 @@ Sys.getenv("CENSUS_KEY")
 
 cps_foodsec <- getCensus(
   name = "2020/cps/foodsec/dec",
-  vars = c("HRFS12MD", "PESEX", "PTDTRACE", "PRTAGE", "HRHTYPE", "HRNUMHOU", 
-           "HEFAMINC", "PRMARSTA", "HEHOUSUT", "PEEDUCA", "HESP1"))
+  vars = c("HRFS12MD", "PESEX", "PTDTRACE", "PEHSPNON", "PRTAGE", "PRCITSHP",
+           "HRHTYPE", "HRNUMHOU", "PEMLR", "HEFAMINC", "PRMARSTA", "HEHOUSUT",
+           "PEEDUCA", "HESP1", "HESP8", "HESP6", "HETS8OU"))
 cps_foodsec
+
+
+# "name": "HESP8",
+# "label": "Program - foods received from WIC Program, past 30 days",
+#     "-2": "Don't Know",
+#     "-1": "Not in Universe",
+#     "2": "No",
+#     "-3": "Refused",
+#     "1": "Yes",
+#     "-9": "No Response"
+
+
+# "name": "HESP6",
+# "label": "Program - free or reduced-cost lunches at school, past 30 days",
+#     "1": "Yes",
+#     "2": "No",
+#     "-2": "Don't Know",
+#     "-3": "Refused",
+#     "-1": "Not in Universe",
+#     "-9": "No Response"
+
+# "name": "HETS8OU",
+# "label": "Expend ï¿½ USUAL amount spent for food per week",
+#     "-2": "Don't Know",
+#     "-1": "Not in Universe",
+#     "-9": "No Response",
+#     "-3": "Refused"
+#   },
+#   "range": [
+#     {
+#       "min": "0",
+      # "max": "500",
+      # "description": "Dollars"
 
 sex_levels <- c("1", "2")
 sex_labels <- c("Male", "Female")
@@ -28,6 +62,15 @@ race_labels <- c("White", "Black", "American Indian, Alaskan Native", "Asian",
                  "W-AI-A-HP", "Other 3 Race Combinations", 
                  "Other 4 and 5 Race Combinations")
 
+hispanicOrigin_levels <- c("1", "2")
+hispanicOrigin_labels <- c("Hispanic", "Non-Hispanic")
+
+citizenship_levels <- c("1", "2", "3", "4", "5")
+citizenship_labels <- c("Native, Born in US", "Native, Born in US Territory", 
+                        "Native, Born Abroad to US Parent(s)", 
+                        "Foreign Born, Naturalized US Citizen", 
+                        "Foreign Born, Not US Citizen")
+
 typeHH_levels <- c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0, -1)
 typeHH_labels <- c("Married Civilian Family", "Married Non-Civilian Family",
                    "Unmarried Civ. Male-Primary Family",
@@ -40,6 +83,13 @@ typeHH_labels <- c("Married Civilian Family", "Married Non-Civilian Family",
                    "Group Quarters Without Family",
                    "Non-Interview Household",
                    "In Universe, Met No Conditions To Assign")
+
+employStatus_levels <- c("1", "2", "3", "4", "5", "6", "7", "-1")
+employStatus_labels <- c("Employed-At Work", "Employed-Absent",
+                         "Unemployed-On Layoff", "Unemployed-Looking",
+                         "Retired-Not In Labor Force",
+                         "Disabled-Not In Labor Force",
+                         "Other-Not In Labor Force", "Not in Universe")
 
 annualHHIncome_levels <- c("-1", "1", "2", "3", "4", "5", "6", "7", "8", "9", 
                            "10", "11", "12", "13", "14", "15", "16")
@@ -102,9 +152,12 @@ foodSecurity <- cps_foodsec %>%
                 rename(foodSecurity = HRFS12MD,
                        sex = PESEX,
                        race = PTDTRACE,
+                       hispanicOrigin = PEHSPNON,
                        age = PRTAGE,
+                       citizenship = PRCITSHP,
                        typeHH = HRHTYPE,
                        numHHMembers = HRNUMHOU,
+                       employStatus = PEMLR,
                        annualHHIncome = HEFAMINC,
                        maritalStatus = PRMARSTA,
                        livingQuarters = HEHOUSUT,
@@ -119,11 +172,20 @@ foodSecurity <- cps_foodsec %>%
                        race = factor(race,
                                      levels = race_levels,
                                      labels = race_labels),
+                       hispanicOrigin = factor(hispanicOrigin,
+                                               levels = hispanicOrigin_levels,
+                                               labels = hispanicOrigin_labels),
                        age = as.numeric(age),
+                       citizenship = factor(citizenship,
+                                            levels = citizenship_levels,
+                                            labels = citizenship_labels),
                        typeHH = factor(typeHH,
                                        levels = typeHH_levels,
                                        labels = typeHH_labels),
                        numHHMembers = as.numeric(numHHMembers),
+                       employStatus = factor(employStatus,
+                                             levels = employStatus_levels,
+                                             labels = employStatus_labels),
                        annualHHIncome = factor(annualHHIncome, 
                                                levels = annualHHIncome_levels,
                                                labels = annualHHIncome_labels),
@@ -158,6 +220,16 @@ levels(foodSecurity$race) <- c("White", "Black", "American Indian, Alaskan Nativ
                                "Three or More Race Combinations",
                                "Three or More Race Combinations")
 
+# Reduce the number of factors of `employmentStatus` by merging "Other" and 
+# "Not in Universe" categories
+levels(foodSecurity$employStatus) <- c("Employed-At Work", "Employed-Absent",
+                                       "Unemployed-On Layoff",
+                                       "Unemployed-Looking",
+                                       "Retired-Not In Labor Force",
+                                       "Disabled-Not In Labor Force",
+                                       "Other-Not In Labor Force",
+                                       "Other-Not In Labor Force")
+
 # Reduce the number of factors of `maritalStatus` by combining civilian and 
 # non-civilian married.
 levels(foodSecurity$maritalStatus) <- c("Married", "Married",
@@ -177,7 +249,7 @@ levels(foodSecurity$livingQuarters) <- c("NA", "House, Apartment, Flat",
 
 # Reduce the number of factors of `educationLevel` by combining all factors less
 # than 7th grade.
-levels(foodSecurity$educationLevel) <- c(c("Less Than 7th Grade", 
+levels(foodSecurity$educationLevel) <- c("Less Than 7th Grade", 
                                            "Less Than 7th Grade",
                                            "Less Than 7th Grade", 
                                            "7th Or 8th Grade", "9th Grade",
@@ -189,18 +261,19 @@ levels(foodSecurity$educationLevel) <- c(c("Less Than 7th Grade",
                                            "Associate Degree-Academic Program",
                                            "Bachelor's Degree", "Master's Degree",
                                            "Professional School Degree",
-                                           "Doctorate Degree", "Not in Universe"))
+                                           "Doctorate Degree", "Not in Universe")
 
 # Drop unused factors of variables
 foodSecurity$typeHH <- droplevels(foodSecurity$typeHH)
 foodSecurity$annualHHIncome <- droplevels(foodSecurity$annualHHIncome)
+#foodSecurity$citizenship <- droplevels(foodSecurity$citizenship)
 #foodSecurity$livingQuarters <- droplevels(foodSecurity$livingQuarters)
 
 #predictors <- names(foodSecurity)[-1]
-predictors <- c("Sex", "Race", "Age", "Type of Household", 
-                "# of Household Members", "Annual Household Income",
-                "Marital Status", "Living Quarters",
-                "Highest Education Level Attained",
+predictors <- c("Sex", "Race", "Hispanic Origin", "Age", "US Citizenship",
+                "Type of Household", "# of Household Members",
+                "Employment Status", "Annual Household Income", "Marital Status",
+                "Living Quarters", "Highest Education Level Attained",
                 "Did Household Receive SNAP Benefits?")
 response <- "Food Security Level"
 

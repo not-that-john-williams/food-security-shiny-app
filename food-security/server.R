@@ -53,32 +53,44 @@ shinyServer(function(input, output, session) {
                 } else {
                 if(input$freqVariable == "Race"){
                     t <- freq(foodSecurity$race)
-                    round(t[-27, -2:-3], 2)
+                    round(t[-17, -2:-3], 2)
+                } else {
+                if(input$freqVariable == "Hispanic Origin"){
+                    t <- freq(foodSecurity$hispanicOrigin)
+                    round(t[-3, -2:-3], 2)
+                } else {
+                if(input$freqVariable == "US Citizenship"){
+                    t <- freq(foodSecurity$citizenship)
+                    round(t[-6, -2:-3], 2)
                 } else {
                 if(input$freqVariable == "Type of Household"){
                     t <- freq(foodSecurity$typeHH)
-                    round(t[-13, -2:-3], 2)
+                    round(t[-11, -2:-3], 2)
+                } else {
+                if(input$freqVariable == "Employment Status"){
+                    t <- freq(foodSecurity$employStatus)
+                    round(t[-8, -2:-3], 2)
                 } else {
                 if(input$freqVariable == "Annual Household Income"){
                     t <- freq(foodSecurity$annualHHIncome)
-                    round(t[c(-1, -18), -2:-3], 2)
+                    round(t[c(-1,-17), -2:-3], 2)
                 } else {
                 if(input$freqVariable == "Marital Status"){
                     t <- freq(foodSecurity$maritalStatus)
-                    round(t[-9, -2:-3], 2)
+                    round(t[-8, -2:-3], 2)
                 } else {
                 if(input$freqVariable == "Living Quarters"){
                     t <- freq(foodSecurity$livingQuarters)
-                    round(t[c(-1, -14), -2:-3], 2)
+                    round(t[c(-1,-6), -2:-3], 2)
                 } else {
                 if(input$freqVariable == "Education Level"){
                     t <- freq(foodSecurity$educationLevel)
-                    round(t[-18, -2:-3], 2)
+                    round(t[-16, -2:-3], 2)
                 } else {
                 if(input$freqVariable == "Household Recieved SNAP Benefits"){
                     t <- freq(foodSecurity$receivedSNAP)
                     round(t[-6, -2:-3], 2)
-                }}}}}}}}}
+                }}}}}}}}}}}}
             }
         }
     })
@@ -105,8 +117,17 @@ shinyServer(function(input, output, session) {
                 if(input$barPlotVariable == "Race"){
                     createBarPlot("race", foodSecurity)
                 }
+                if(input$barPlotVariable == "Hispanic Origin"){
+                    createBarPlot("hispanicOrigin", foodSecurity)
+                }
+                if(input$barPlotVariable == "US Citizenship"){
+                    createBarPlot("citizenship", foodSecurity)
+                }
                 if(input$barPlotVariable == "Type of Household"){
                     createBarPlot("typeHH", foodSecurity)
+                }
+                if(input$barPlotVariable == "Employment Status"){
+                    createBarPlot("employStatus", foodSecurity)
                 }
                 if(input$barPlotVariable == "Annual Household Income"){
                     createBarPlot("annualHHIncome", foodSecurity)
@@ -151,11 +172,38 @@ shinyServer(function(input, output, session) {
                         facet_grid(~ foodSecurity) + 
                         coord_flip()
                 } else {
+                if(input$otherPlotVariable == "Hispanic Origin"){
+                    foodSecurity %>% group_by(hispanicOrigin, foodSecurity) %>%
+                        summarize(n = n()) %>% 
+                        mutate(perc = 100*n/sum(n)) %>% 
+                        ggplot(aes(x = hispanicOrigin, y = perc)) +
+                        geom_bar(stat = "identity") +
+                        facet_grid(~ foodSecurity) + 
+                        coord_flip()
+                } else {
+                if(input$otherPlotVariable == "US Citizenship"){
+                    foodSecurity %>% group_by(citizenship, foodSecurity) %>%
+                        summarize(n = n()) %>% 
+                        mutate(perc = 100*n/sum(n)) %>% 
+                        ggplot(aes(x = citizenship, y = perc)) +
+                        geom_bar(stat = "identity") +
+                        facet_grid(~ foodSecurity) + 
+                        coord_flip()
+                } else {
                 if(input$otherPlotVariable == "Type of Household"){
                     foodSecurity %>% group_by(typeHH, foodSecurity) %>%
                         summarize(n = n()) %>% 
                         mutate(perc = 100*n/sum(n)) %>% 
                         ggplot(aes(x = typeHH, y = perc)) +
+                        geom_bar(stat = "identity") +
+                        facet_grid(~ foodSecurity) + 
+                        coord_flip()
+                } else {
+                if(input$otherPlotVariable == "Employment Status"){
+                    foodSecurity %>% group_by(employStatus, foodSecurity) %>%
+                        summarize(n = n()) %>% 
+                        mutate(perc = 100*n/sum(n)) %>% 
+                        ggplot(aes(x = employStatus, y = perc)) +
                         geom_bar(stat = "identity") +
                         facet_grid(~ foodSecurity) + 
                         coord_flip()
@@ -204,7 +252,7 @@ shinyServer(function(input, output, session) {
                         geom_bar(stat = "identity") +
                         facet_grid(~ foodSecurity) + 
                         coord_flip()
-                }}}}}}}}
+                }}}}}}}}}}}
             }
         }
     })
@@ -222,6 +270,7 @@ shinyServer(function(input, output, session) {
             
             # Remove "No Response" from `foodSecurity`
             data <- foodSecurity %>% filter(foodSecurity != "No Response")
+            data$foodSecurity <- droplevels(data$foodSecurity)
             
             vars <- unlist(input$multiModelVars)
             trainIndex <- createDataPartition(data$foodSecurity,
@@ -350,7 +399,7 @@ shinyServer(function(input, output, session) {
             style = 'bootstrap',
             class = 'cell-border stripe',
             rownames = FALSE,
-            colnames = c(predictors, response)
+            colnames = c(response, predictors)
         ))
 
 })
