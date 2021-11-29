@@ -27,7 +27,9 @@ shinyUI(navbarPage(
             mainPanel(
                 
                 # Image sourced from "www.mtm-inc.net"
-                img(src="food-security-pyramid.png")
+                img(src="food-security-pyramid.png",
+                    height = '406px', 
+                    width = '640px')
                 # Describe the purpose of the app
                 # Briefly discuss the data and its source - providing a link
                 # to more information about the data
