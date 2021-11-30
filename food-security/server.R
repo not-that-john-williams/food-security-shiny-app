@@ -9,6 +9,7 @@ library(nnet)
 library(rpart)
 library(rattle)
 library(ranger)
+library(graphics)
 
 createBarPlot <- function(group, data){
     barPlot <- data %>% 
@@ -110,7 +111,7 @@ shinyServer(function(input, output, session) {
     
     output$barPlot <- renderPlot({
         if(input$summaryType == "Graphical"){
-            if(input$plotType == "Bar Plot"){
+            if(input$plotType == "Bar Plot - Vertical"){
                 if(input$barPlotVariable == "Sex"){
                     createBarPlot("sex", foodSecurity)
                 }
@@ -150,7 +151,7 @@ shinyServer(function(input, output, session) {
     
     output$otherPlot <- renderPlot({
         if(input$summaryType == "Graphical"){
-            if(input$plotType == "Other Plot"){
+            if(input$plotType == "Bar Plot - Horizontal"){
                 if(input$otherPlotVariable == "Sex"){
                     # Attempted to use a function to create this plot, but 
                     # `eval(parse(text = "..."))` wasn't compatible with 
@@ -255,6 +256,101 @@ shinyServer(function(input, output, session) {
                 }}}}}}}}}}}
             }
         }
+    })
+    
+    output$mosaicPlot <- renderPlot({
+      if(input$summaryType == "Graphical"){
+        if(input$plotType == "Mosaic Plot"){
+          if(input$mosaicPlotVariable == "Sex"){
+            mosaicplot(~ foodSecurityNR$sex + foodSecurityNR$foodSecurity,
+                       shade = TRUE,  # Add color to plot
+                       las = 2,  # Print variable names vertically
+                       main = "'Sex' vs. 'Food Security'",
+                       xlab = "Sex",
+                       ylab = "Food Security")
+          } else {
+          if(input$mosaicPlotVariable == "Race"){
+            mosaicplot(~ foodSecurityNR$race + foodSecurityNR$foodSecurity,
+                       shade = TRUE,  # Add color to plot
+                       las = 2,  # Print variable names vertically
+                       main = "'Race' vs. 'Food Security'",
+                       xlab = "Race",
+                       ylab = "Food Security")
+          } else {
+          if(input$mosaicPlotVariable == "Hispanic Origin"){
+            mosaicplot(~ foodSecurityNR$hispanicOrigin + foodSecurityNR$foodSecurity,
+                       shade = TRUE,  # Add color to plot
+                       las = 2,  # Print variable names vertically
+                       main = "'Hispanic Origin' vs. 'Food Security'",
+                       xlab = "Hispanic Origin",
+                       ylab = "Food Security")
+          } else {
+          if(input$mosaicPlotVariable == "US Citizenship"){
+            mosaicplot(~ foodSecurityNR$citizenship + foodSecurityNR$foodSecurity,
+                       shade = TRUE,  # Add color to plot
+                       las = 2,  # Print variable names vertically
+                       main = "'US Citizenship' vs. 'Food Security'",
+                       xlab = "US Citizenship",
+                       ylab = "Food Security")
+          } else {
+          if(input$mosaicPlotVariable == "Type of Household"){
+            mosaicplot(~ foodSecurityNR$typeHH + foodSecurityNR$foodSecurity,
+                       shade = TRUE,  # Add color to plot
+                       las = 2,  # Print variable names vertically
+                       main = "'Type of Household' vs. 'Food Security'",
+                       xlab = "Type of Household",
+                       ylab = "Food Security")
+          } else {
+          if(input$mosaicPlotVariable == "Employment Status"){
+            mosaicplot(~ foodSecurityNR$employStatus + foodSecurityNR$foodSecurity,
+                       shade = TRUE,  # Add color to plot
+                       las = 2,  # Print variable names vertically
+                       main = "'Employment Status' vs. 'Food Security'",
+                       xlab = "Employment Status",
+                       ylab = "Food Security")
+          } else {
+          if(input$mosaicPlotVariable == "Annual Household Income"){
+            mosaicplot(~ foodSecurityNR$annualHHIncome + foodSecurityNR$foodSecurity,
+                       shade = TRUE,  # Add color to plot
+                       las = 2,  # Print variable names vertically
+                       main = "'Annual Household Income' vs. 'Food Security'",
+                       xlab = "Annual Household Income",
+                       ylab = "Food Security")
+          } else {
+          if(input$mosaicPlotVariable == "Marital Status"){
+            mosaicplot(~ foodSecurityNR$maritalStatus + foodSecurityNR$foodSecurity,
+                       shade = TRUE,  # Add color to plot
+                       las = 2,  # Print variable names vertically
+                       main = "'Marital Status' vs. 'Food Security'",
+                       xlab = "Marital Status",
+                       ylab = "Food Security")
+          } else {
+          if(input$mosaicPlotVariable == "Living Quarters"){
+            mosaicplot(~ foodSecurityNR$livingQuarters + foodSecurityNR$foodSecurity,
+                       shade = TRUE,  # Add color to plot
+                       las = 2,  # Print variable names vertically
+                       main = "'Living Quarters' vs. 'Food Security'",
+                       xlab = "Living Quarters",
+                       ylab = "Food Security")
+          } else {
+          if(input$mosaicPlotVariable == "Education Level"){
+            mosaicplot(~ foodSecurityNR$educationLevel + foodSecurityNR$foodSecurity,
+                       shade = TRUE,  # Add color to plot
+                       las = 2,  # Print variable names vertically
+                       main = "'Education Level' vs. 'Food Security'",
+                       xlab = "Education Level",
+                       ylab = "Food Security")
+          } else {
+          if(input$mosaicPlotVariable == "Household Recieved SNAP Benefits"){
+            mosaicplot(~ foodSecurityNR$receivedSNAP + foodSecurityNR$foodSecurity,
+                       shade = TRUE,  # Add color to plot
+                       las = 2,  # Print variable names vertically
+                       main = "'Household Recieved SNAP Benefits' vs. 'Food Security'",
+                       xlab = "Household Recieved SNAP Benefits",
+                       ylab = "Food Security")
+          }}}}}}}}}}}
+        }
+      }
     })
     
     observeEvent(input$runMLM, {

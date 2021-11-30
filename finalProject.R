@@ -207,7 +207,10 @@ foodSecurity <- cps_foodsec %>%
 levels(foodSecurity$race) <- c("White", "Black", "American Indian, Alaskan Native",
                                "Asian", "Hawaiian/Pacific Islander", "White-Black",
                                "White-AI", "White-Asian", "White-HP", "Black-AI", 
-                               "Black-Asian", "Black-HP", "AI-Asian", "AI-HP",
+                               "Other Two-Race Combination", 
+                               "Other Two-Race Combination", 
+                               "Other Two-Race Combination", 
+                               "Other Two-Race Combination",
                                "Asian-HP", "Three or More Race Combinations",
                                "Three or More Race Combinations",
                                "Three or More Race Combinations",
@@ -276,6 +279,22 @@ predictors <- c("Sex", "Race", "Hispanic Origin", "Age", "US Citizenship",
                 "Living Quarters", "Highest Education Level Attained",
                 "Did Household Receive SNAP Benefits?")
 response <- "Food Security Level"
+
+foodSecurityNR <- foodSecurity %>% 
+                  filter(foodSecurity != "No Response") #%>%
+                  #filter(race == c("White", "Black", "American Indian, Alaskan Native", "Asian", "Hawaiian/Pacific Islander"))
+foodSecurityNR$foodSecurity <- droplevels(foodSecurityNR$foodSecurity)
+foodSecurityNR$race <- droplevels(foodSecurityNR$race)
+levels(foodSecurityNR$foodSecurity) <- c("Secure", "Secure", "Insecure", 
+                                         "Insecure")
+levels(foodSecurityNR$race) <- c("White", "Black", "American Indian, Alaskan Native",
+                               "Asian", "Hawaiian/Pacific Islander",
+                               "Two-Race Combination", "Two-Race Combination",
+                               "Two-Race Combination", "Two-Race Combination",
+                               "Two-Race Combination", "Two-Race Combination", 
+                               "Two-Race Combination",
+                               "Three or More Race Combinations")
+
 
 group <- foodSecurity$sex
 x <- foodSecurity$foodSecurity
