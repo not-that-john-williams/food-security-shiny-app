@@ -176,7 +176,11 @@ shinyUI(navbarPage(
             selectInput("mosaicPlotVariable",
               label = "Select a group variable:",
               choices = factorVariables[-1]  # Excluding 'Food Security'
-            )
+            ),
+            actionButton("createMosaicPlot", label = "Create Mosaic Plot"),
+            br(), br(), br(), # Add vertical space between elements
+            uiOutput("adjustMosaicPlotHeight"),
+            uiOutput("adjustMosaicPlotWidth")
           )
         )
       ),
@@ -201,7 +205,12 @@ shinyUI(navbarPage(
             plotOutput("otherPlot")
           ),
           conditionalPanel(condition = "input.plotType == 'Mosaic Plot'",
-            plotOutput("mosaicPlot")
+            plotOutput("mosaicPlot"),
+            #br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+            #sliderInput("height", "Adjust plot height:", 
+            #            min = 400, max = 750, value = 700),
+            #sliderInput("width", "Adjust plot width:", 
+            #            min = 600, max = 1200, value = 900)
           )
         )
       )

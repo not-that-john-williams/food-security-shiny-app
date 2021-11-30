@@ -258,7 +258,21 @@ shinyServer(function(input, output, session) {
         }
     })
     
-    output$mosaicPlot <- renderPlot({
+    observeEvent(input$createMosaicPlot, {
+      output$adjustMosaicPlotHeight <- renderUI({
+        sliderInput("height", "Adjust plot height:",
+                    min = 500, max = 900, value = 700)
+      })
+      output$adjustMosaicPlotWidth <- renderUI({
+        sliderInput("width", "Adjust plot width:", 
+                    min = 600, max = 1200, value = 900)
+      })
+      
+    output$mosaicPlot <- renderPlot(
+      width = function() input$width,
+      height = function() input$height,
+      res = 96,
+      {
       if(input$summaryType == "Graphical"){
         if(input$plotType == "Mosaic Plot"){
           if(input$mosaicPlotVariable == "Sex"){
@@ -351,6 +365,7 @@ shinyServer(function(input, output, session) {
           }}}}}}}}}}}
         }
       }
+    })
     })
     
     observeEvent(input$runMLM, {
