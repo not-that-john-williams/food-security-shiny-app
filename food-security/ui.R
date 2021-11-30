@@ -188,9 +188,11 @@ shinyUI(navbarPage(
       mainPanel(
         conditionalPanel(condition = "input.summaryType == 'Numerical'",
           conditionalPanel(condition = "input.numericalType == 'Frequency Tables'",
-            DT::dataTableOutput("dataTable")
+            htmlOutput("freqTableTitle"),
+            DT::dataTableOutput("freqTable")
           ),
           conditionalPanel(condition = "input.numericalType == 'Contingency Tables'",
+            htmlOutput("contingencyTableTitle"),
             verbatimTextOutput("contingencyTable")
           ),
           conditionalPanel(condition = "input.numericalType == 'Descriptive Statistics'",

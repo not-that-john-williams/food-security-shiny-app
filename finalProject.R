@@ -296,13 +296,3 @@ levels(foodSecurityNR$race) <- c("White", "Black", "American Indian, Alaskan Nat
                                "Three or More Race Combinations")
 
 
-group <- foodSecurity$sex
-x <- foodSecurity$foodSecurity
-d <- ggplot(foodSecurity, aes(x = x, group = group))
-d + geom_bar(aes(y = ..prop.., fill = factor(..x..))) +
-    scale_y_continuous(labels=scales::percent) +
-    ylab("relative frequencies") +
-    facet_wrap(vars(sex))
-
-#x, alpha, color, fill, linetype, size, weight
-  

@@ -11,103 +11,124 @@ library(rattle)
 library(ranger)
 library(graphics)
 
+# Function to create horizontal bar plots
 createBarPlot <- function(group, data){
-    barPlot <- data %>% 
-               ggplot(aes(x = foodSecurity, group = eval(parse(text = group)))) +
-               geom_bar(aes(y = ..prop.., fill = factor(..x..))) +
-               scale_y_continuous(labels=scales::percent) +
-               scale_fill_discrete(name = "Food Security", 
-                                   labels = c("High", "Marginal", "Low", 
-                                              "Very Low", "No Response")) +
-               labs(x = "Food Security", y = "Relative Frequencies",
-                    title = "") +
-               facet_wrap(vars(eval(parse(text = group))))
+  barPlot <- data %>% 
+    ggplot(aes(x = foodSecurity, group = eval(parse(text = group)))) +
+    geom_bar(aes(y = ..prop.., fill = factor(..x..))) +
+    scale_y_continuous(labels=scales::percent) +
+    scale_fill_discrete(
+      name = "Food Security", 
+      labels = c("High", "Marginal", "Low", "Very Low", "No Response")) +
+      labs(x = "Food Security", y = "Relative Frequencies", title = "") +
+      facet_wrap(vars(eval(parse(text = group))))
     print(barPlot)
 }
 
+# Function to create vertical bar plots
 createOtherPlot <- function(group, data){
-    otherPlot <- data %>% 
-        summarize(n = n()) %>% 
-        mutate(perc = 100*n/sum(n)) %>% 
-        ggplot(aes(x = eval(parse(text = group)), y = perc)) +
-        geom_bar(stat = "identity") +
-        facet_grid(~ foodSecurity) + 
-        coord_flip()
-    print(otherPlot)
+  otherPlot <- data %>% 
+    summarize(n = n()) %>% 
+    mutate(perc = 100*n/sum(n)) %>% 
+    ggplot(aes(x = eval(parse(text = group)), y = perc)) +
+    geom_bar(stat = "identity") +
+    facet_grid(~ foodSecurity) + 
+    coord_flip()
+  print(otherPlot)
 }
 
-# Define server logic required to draw a histogram
 shinyServer(function(input, output, session) {
+  
+  # Create a title for the frequency table
+  output$freqTableTitle <- renderUI({
+    h3("Frequency Table of ", input$freqVariable)
+  })
 
-    output$dataTable <- DT::renderDataTable({
-        if(input$summaryType == "Numerical"){
-            if(input$numericalType == "Frequency Tables"){
-                if(input$freqVariable == "Food Security"){
-                    t <- freq(foodSecurity$foodSecurity)
-                    # Print only selected rows and columns of table,
-                    # Rounding to two decimal places
-                    round(t[-6, -2:-3], 2)
-                } else {
-                if(input$freqVariable == "Sex"){
-                    t <- freq(foodSecurity$sex)
-                    round(t[-3, -2:-3], 2)
-                } else {
-                if(input$freqVariable == "Race"){
-                    t <- freq(foodSecurity$race)
-                    round(t[-17, -2:-3], 2)
-                } else {
-                if(input$freqVariable == "Hispanic Origin"){
-                    t <- freq(foodSecurity$hispanicOrigin)
-                    round(t[-3, -2:-3], 2)
-                } else {
-                if(input$freqVariable == "US Citizenship"){
-                    t <- freq(foodSecurity$citizenship)
-                    round(t[-6, -2:-3], 2)
-                } else {
-                if(input$freqVariable == "Type of Household"){
-                    t <- freq(foodSecurity$typeHH)
-                    round(t[-11, -2:-3], 2)
-                } else {
-                if(input$freqVariable == "Employment Status"){
-                    t <- freq(foodSecurity$employStatus)
-                    round(t[-8, -2:-3], 2)
-                } else {
-                if(input$freqVariable == "Annual Household Income"){
-                    t <- freq(foodSecurity$annualHHIncome)
-                    round(t[c(-1,-17), -2:-3], 2)
-                } else {
-                if(input$freqVariable == "Marital Status"){
-                    t <- freq(foodSecurity$maritalStatus)
-                    round(t[-8, -2:-3], 2)
-                } else {
-                if(input$freqVariable == "Living Quarters"){
-                    t <- freq(foodSecurity$livingQuarters)
-                    round(t[c(-1,-6), -2:-3], 2)
-                } else {
-                if(input$freqVariable == "Education Level"){
-                    t <- freq(foodSecurity$educationLevel)
-                    round(t[-16, -2:-3], 2)
-                } else {
-                if(input$freqVariable == "Household Recieved SNAP Benefits"){
-                    t <- freq(foodSecurity$receivedSNAP)
-                    round(t[-6, -2:-3], 2)
-                }}}}}}}}}}}}
-            }
-        }
-    })
-    
-    output$contingencyTable <- renderPrint({
-        # Create contingency table using `gmodels` package
-        with(foodSecurity, CrossTable(eval(parse(text = input$contingencyVar1)), 
-                                      eval(parse(text = input$contingencyVar2))))
-    })
-    
-    output$descripStat <- renderPrint({
-        if(input$descripStatVariable == "Age")
-            summary(foodSecurity$age)
-        else if(input$descripStatVariable == "Number of Household Members")
-            summary(foodSecurity$numHHMembers)
-    })
+  # Create a frequency table for a specified categorical variable
+  output$freqTable <- DT::renderDataTable({
+    if(input$summaryType == "Numerical"){
+      if(input$numericalType == "Frequency Tables"){
+        if(input$freqVariable == "Food Security"){
+          t <- freq(foodSecurity$foodSecurity)
+          # Print only selected rows and columns of table, rounding to two 
+          # decimal places.
+          round(t[-6, -2:-3], 2)
+        } else {
+        if(input$freqVariable == "Sex"){
+          t <- freq(foodSecurity$sex)
+          round(t[-3, -2:-3], 2)
+        } else {
+        if(input$freqVariable == "Race"){
+          t <- freq(foodSecurity$race)
+          round(t[-17, -2:-3], 2)
+        } else {
+        if(input$freqVariable == "Hispanic Origin"){
+          t <- freq(foodSecurity$hispanicOrigin)
+          round(t[-3, -2:-3], 2)
+        } else {
+        if(input$freqVariable == "US Citizenship"){
+          t <- freq(foodSecurity$citizenship)
+          round(t[-6, -2:-3], 2)
+        } else {
+          if(input$freqVariable == "Type of Household"){
+          t <- freq(foodSecurity$typeHH)
+          round(t[-11, -2:-3], 2)
+        } else {
+        if(input$freqVariable == "Employment Status"){
+          t <- freq(foodSecurity$employStatus)
+          round(t[-8, -2:-3], 2)
+        } else {
+        if(input$freqVariable == "Annual Household Income"){
+          t <- freq(foodSecurity$annualHHIncome)
+          round(t[c(-1,-17), -2:-3], 2)
+        } else {
+        if(input$freqVariable == "Marital Status"){
+          t <- freq(foodSecurity$maritalStatus)
+          round(t[-8, -2:-3], 2)
+        } else {
+        if(input$freqVariable == "Living Quarters"){
+          t <- freq(foodSecurity$livingQuarters)
+          round(t[c(-1,-6), -2:-3], 2)
+        } else {
+        if(input$freqVariable == "Education Level"){
+          t <- freq(foodSecurity$educationLevel)
+          round(t[-16, -2:-3], 2)
+        } else {
+        if(input$freqVariable == "Household Recieved SNAP Benefits"){
+          t <- freq(foodSecurity$receivedSNAP)
+          round(t[-6, -2:-3], 2)
+        }}}}}}}}}}}}
+      }
+    }
+  })
+  
+  # Create a title for the contingency table
+  output$contingencyTableTitle <- renderUI({
+    h3("Contingency Table of ", input$contingencyVar1,
+       " vs. ", input$contingencyVar2)
+  })
+
+  # Using `gmodels` package, create a contingency table  for two specified 
+  # categorical variables.
+  output$contingencyTable <- renderPrint({
+    with(foodSecurity,
+         CrossTable(
+           eval(parse(text = input$contingencyVar1)),
+           eval(parse(text = input$contingencyVar2)),
+           digits = 2,  # Round to two decimal places
+           dnn = c(input$contingencyVar1,
+                   input$contingencyVar2) # Rename variable titles
+         )
+    )
+  })
+  
+  # Create descriptive statistics of the selected continuous variable
+  output$descripStat <- renderPrint({
+    if(input$descripStatVariable == "Age")
+      summary(foodSecurity$age)
+    else if(input$descripStatVariable == "Number of Household Members")
+      summary(foodSecurity$numHHMembers)
+  })
     
     output$barPlot <- renderPlot({
         if(input$summaryType == "Graphical"){
