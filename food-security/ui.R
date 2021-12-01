@@ -28,7 +28,7 @@ factorVariables <- c("Food Security",
                      "Marital Status",
                      "Living Quarters",
                      "Education Level",
-                     "Household Recieved SNAP Benefits")
+                     "Household Received SNAP Benefits")
 
 shinyUI(navbarPage(
     
@@ -153,7 +153,9 @@ shinyUI(navbarPage(
             selectInput("barPlotVariable",
               label = "Select a group variable:",
               choices = factorVariables[-1]  # Excluding 'Food Security'
-            )
+            ),
+            checkboxInput("excludeNoResponseFromBarPlot",
+              label = "Change 'Food Security' to a binary factor; exclude 'No Response'")
           ),
           conditionalPanel(condition = "input.plotType == 'Bar Plot - Horizontal'",
             selectInput("otherPlotVariable",
@@ -190,7 +192,12 @@ shinyUI(navbarPage(
         ),
         conditionalPanel(condition = "input.summaryType == 'Graphical'",
           conditionalPanel(condition = "input.plotType == 'Bar Plot - Vertical'",
-            plotOutput("barPlot")
+            conditionalPanel(condition = "input.excludeNoResponseFromBarPlot == 1",
+              plotOutput("barPlotExclude")
+            ),
+            conditionalPanel(condition = "input.excludeNoResponseFromBarPlot == 0",
+              plotOutput("barPlot")
+            )
           ),
           conditionalPanel(condition = "input.plotType == 'Bar Plot - Horizontal'",
             plotOutput("otherPlot")
