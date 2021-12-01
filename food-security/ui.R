@@ -19,8 +19,10 @@ factorVariables <- c("Food Security",
                      "Sex",
                      "Race",
                      "Hispanic Origin",
+                     "Age",
                      "US Citizenship",
                      "Type of Household",
+                     "Number of Household Members",
                      "Employment Status",
                      "Annual Household Income",
                      "Marital Status",
@@ -120,8 +122,7 @@ shinyUI(navbarPage(
           radioButtons("numericalType",
             label = "Select one:",
             choices = c("Frequency Tables", 
-                        "Contingency Tables", 
-                        "Descriptive Statistics")
+                        "Contingency Tables")
           ),
           conditionalPanel(condition = "input.numericalType == 'Frequency Tables'",
             selectInput("freqVariable",
@@ -132,23 +133,11 @@ shinyUI(navbarPage(
           conditionalPanel(condition = "input.numericalType == 'Contingency Tables'",
             selectInput("contingencyVar1",
               label = "Select first variable:",
-              choices = c("foodSecurity", "sex", "race", "hispanicOrigin", 
-                          "citizenship", "typeHH", "employStatus", 
-                          "annualHHIncome", "maritalStatus", "livingQuarters",
-                          "educationLevel", "receivedSNAP")
+              choices = names(foodSecurity)
             ),
             selectInput("contingencyVar2",
               label = "Select second variable:",
-              choices = c("foodSecurity", "sex", "race", "hispanicOrigin",
-                          "citizenship","typeHH", "employStatus",
-                          "annualHHIncome", "maritalStatus", "livingQuarters",
-                          "educationLevel", "receivedSNAP")
-            )
-          ),
-          conditionalPanel(condition = "input.numericalType == 'Descriptive Statistics'",
-            selectInput("descripStatVariable",
-              label = "Select a group variable:",
-              choices = c("Age", "Number of Household Members")
+              choices = names(foodSecurity)
             )
           )
         ),
@@ -208,11 +197,6 @@ shinyUI(navbarPage(
           ),
           conditionalPanel(condition = "input.plotType == 'Mosaic Plot'",
             plotOutput("mosaicPlot"),
-            #br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
-            #sliderInput("height", "Adjust plot height:", 
-            #            min = 400, max = 750, value = 700),
-            #sliderInput("width", "Adjust plot width:", 
-            #            min = 600, max = 1200, value = 900)
           )
         )
       )

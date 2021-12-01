@@ -66,12 +66,20 @@ shinyServer(function(input, output, session) {
           t <- freq(foodSecurity$hispanicOrigin)
           round(t[-3, -2:-3], 2)
         } else {
+        if(input$freqVariable == "Age"){
+          t <- freq(foodSecurity$age)
+          round(t[-19, -2:-3], 2)
+        } else {
         if(input$freqVariable == "US Citizenship"){
           t <- freq(foodSecurity$citizenship)
           round(t[-6, -2:-3], 2)
         } else {
-          if(input$freqVariable == "Type of Household"){
+        if(input$freqVariable == "Type of Household"){
           t <- freq(foodSecurity$typeHH)
+          round(t[-11, -2:-3], 2)
+        } else {
+        if(input$freqVariable == "Number of Household Members"){
+          t <- freq(foodSecurity$numHHMembers)
           round(t[-11, -2:-3], 2)
         } else {
         if(input$freqVariable == "Employment Status"){
@@ -97,7 +105,7 @@ shinyServer(function(input, output, session) {
         if(input$freqVariable == "Household Recieved SNAP Benefits"){
           t <- freq(foodSecurity$receivedSNAP)
           round(t[-6, -2:-3], 2)
-        }}}}}}}}}}}}
+        }}}}}}}}}}}}}}  # Close out nested if/else statements
       }
     }
   })
@@ -122,172 +130,202 @@ shinyServer(function(input, output, session) {
     )
   })
   
-  # Create descriptive statistics of the selected continuous variable
-  output$descripStat <- renderPrint({
-    if(input$descripStatVariable == "Age")
-      summary(foodSecurity$age)
-    else if(input$descripStatVariable == "Number of Household Members")
-      summary(foodSecurity$numHHMembers)
+  output$barPlot <- renderPlot({
+    if(input$summaryType == "Graphical"){
+      if(input$plotType == "Bar Plot - Vertical"){
+        if(input$barPlotVariable == "Sex"){
+          createBarPlot("sex", foodSecurity)
+        }
+        if(input$barPlotVariable == "Race"){
+          createBarPlot("race", foodSecurity)
+        }
+        if(input$barPlotVariable == "Hispanic Origin"){
+          createBarPlot("hispanicOrigin", foodSecurity)
+        }
+        if(input$barPlotVariable == "Age"){
+          createBarPlot("age", foodSecurity)
+        }
+        if(input$barPlotVariable == "US Citizenship"){
+          createBarPlot("citizenship", foodSecurity)
+        }
+        if(input$barPlotVariable == "Type of Household"){
+          createBarPlot("typeHH", foodSecurity)
+        }
+        if(input$barPlotVariable == "Number of Household Members"){
+          createBarPlot("numHHMembers", foodSecurity)
+        }
+        if(input$barPlotVariable == "Employment Status"){
+          createBarPlot("employStatus", foodSecurity)
+        }
+        if(input$barPlotVariable == "Annual Household Income"){
+          createBarPlot("annualHHIncome", foodSecurity)
+        }
+        if(input$barPlotVariable == "Marital Status"){
+          createBarPlot("maritalStatus", foodSecurity)
+        }
+        if(input$barPlotVariable == "Living Quarters"){
+          createBarPlot("livingQuarters", foodSecurity)
+        }
+        if(input$barPlotVariable == "Education Level"){
+          createBarPlot("educationLevel", foodSecurity)
+        }
+        if(input$barPlotVariable == "Household Recieved SNAP Benefits"){
+          createBarPlot("receivedSNAP", foodSecurity)
+        }
+      }
+    }
   })
-    
-    output$barPlot <- renderPlot({
-        if(input$summaryType == "Graphical"){
-            if(input$plotType == "Bar Plot - Vertical"){
-                if(input$barPlotVariable == "Sex"){
-                    createBarPlot("sex", foodSecurity)
-                }
-                if(input$barPlotVariable == "Race"){
-                    createBarPlot("race", foodSecurity)
-                }
-                if(input$barPlotVariable == "Hispanic Origin"){
-                    createBarPlot("hispanicOrigin", foodSecurity)
-                }
-                if(input$barPlotVariable == "US Citizenship"){
-                    createBarPlot("citizenship", foodSecurity)
-                }
-                if(input$barPlotVariable == "Type of Household"){
-                    createBarPlot("typeHH", foodSecurity)
-                }
-                if(input$barPlotVariable == "Employment Status"){
-                    createBarPlot("employStatus", foodSecurity)
-                }
-                if(input$barPlotVariable == "Annual Household Income"){
-                    createBarPlot("annualHHIncome", foodSecurity)
-                }
-                if(input$barPlotVariable == "Marital Status"){
-                    createBarPlot("maritalStatus", foodSecurity)
-                }
-                if(input$barPlotVariable == "Living Quarters"){
-                    createBarPlot("livingQuarters", foodSecurity)
-                }
-                if(input$barPlotVariable == "Education Level"){
-                    createBarPlot("educationLevel", foodSecurity)
-                }
-                if(input$barPlotVariable == "Household Recieved SNAP Benefits"){
-                    createBarPlot("receivedSNAP", foodSecurity)
-                }
-            }
-        }
+  
+  output$otherPlot <- renderPlot({
+    if(input$summaryType == "Graphical"){
+      if(input$plotType == "Bar Plot - Horizontal"){
+        if(input$otherPlotVariable == "Sex"){
+          # Attempted to use a function to create this plot, but 
+          # `eval(parse(text = "..."))` wasn't compatible with 
+          # `group_by()`.  More research needed.
+          foodSecurity %>%
+            group_by(sex, foodSecurity) %>%
+            summarize(n = n()) %>%
+            mutate(perc = 100*n/sum(n)) %>%
+            ggplot(aes(x = sex, y = perc)) +
+              geom_bar(stat = "identity") +
+              facet_grid(~ foodSecurity) +
+              coord_flip()
+        } else {
+        if(input$otherPlotVariable == "Race"){
+          foodSecurity %>%
+            group_by(race, foodSecurity) %>%
+            summarize(n = n()) %>%
+            mutate(perc = 100*n/sum(n)) %>%
+            ggplot(aes(x = race, y = perc)) +
+              geom_bar(stat = "identity") +
+              facet_grid(~ foodSecurity) +
+              coord_flip()
+        } else {
+        if(input$otherPlotVariable == "Hispanic Origin"){
+          foodSecurity %>%
+            group_by(hispanicOrigin, foodSecurity) %>%
+            summarize(n = n()) %>%
+            mutate(perc = 100*n/sum(n)) %>%
+            ggplot(aes(x = hispanicOrigin, y = perc)) +
+              geom_bar(stat = "identity") +
+              facet_grid(~ foodSecurity) +
+              coord_flip()
+        } else {
+        if(input$otherPlotVariable == "Age"){
+          foodSecurity %>%
+            group_by(age, foodSecurity) %>%
+            summarize(n = n()) %>%
+            mutate(perc = 100*n/sum(n)) %>%
+            ggplot(aes(x = age, y = perc)) +
+              geom_bar(stat = "identity") +
+              facet_grid(~ foodSecurity) +
+              coord_flip()
+        } else {
+        if(input$otherPlotVariable == "US Citizenship"){
+          foodSecurity %>%
+            group_by(citizenship, foodSecurity) %>%
+            summarize(n = n()) %>%
+            mutate(perc = 100*n/sum(n)) %>%
+            ggplot(aes(x = citizenship, y = perc)) +
+              geom_bar(stat = "identity") +
+              facet_grid(~ foodSecurity) +
+              coord_flip()
+        } else {
+        if(input$otherPlotVariable == "Type of Household"){
+          foodSecurity %>%
+            group_by(typeHH, foodSecurity) %>%
+            summarize(n = n()) %>%
+            mutate(perc = 100*n/sum(n)) %>%
+            ggplot(aes(x = typeHH, y = perc)) +
+              geom_bar(stat = "identity") +
+              facet_grid(~ foodSecurity) +
+              coord_flip()
+        } else {
+        if(input$otherPlotVariable == "Number of Household Members"){
+          foodSecurity %>%
+            group_by(numHHMembers, foodSecurity) %>%
+            summarize(n = n()) %>%
+            mutate(perc = 100*n/sum(n)) %>%
+            ggplot(aes(x = numHHMembers, y = perc)) +
+              geom_bar(stat = "identity") +
+              facet_grid(~ foodSecurity) +
+              coord_flip()
+        } else {
+        if(input$otherPlotVariable == "Employment Status"){
+          foodSecurity %>%
+            group_by(employStatus, foodSecurity) %>%
+            summarize(n = n()) %>%
+            mutate(perc = 100*n/sum(n)) %>%
+            ggplot(aes(x = employStatus, y = perc)) +
+              geom_bar(stat = "identity") +
+              facet_grid(~ foodSecurity) +
+              coord_flip()
+        } else {
+        if(input$otherPlotVariable == "Annual Household Income"){
+          foodSecurity %>%
+            group_by(annualHHIncome, foodSecurity) %>%
+            summarize(n = n()) %>%
+            mutate(perc = 100*n/sum(n)) %>%
+            ggplot(aes(x = annualHHIncome, y = perc)) +
+              geom_bar(stat = "identity") +
+              facet_grid(~ foodSecurity) +
+              coord_flip()
+        } else {
+        if(input$otherPlotVariable == "Marital Status"){
+          foodSecurity %>%
+            group_by(maritalStatus, foodSecurity) %>%
+            summarize(n = n()) %>%
+            mutate(perc = 100*n/sum(n)) %>%
+            ggplot(aes(x = maritalStatus, y = perc)) +
+              geom_bar(stat = "identity") +
+              facet_grid(~ foodSecurity) +
+              coord_flip()
+        } else {
+        if(input$otherPlotVariable == "Living Quarters"){
+          foodSecurity %>% group_by(livingQuarters, foodSecurity) %>%
+            summarize(n = n()) %>%
+            mutate(perc = 100*n/sum(n)) %>%
+            ggplot(aes(x = livingQuarters, y = perc)) +
+              geom_bar(stat = "identity") +
+              facet_grid(~ foodSecurity) +
+              coord_flip()
+                } else {
+        if(input$otherPlotVariable == "Education Level"){
+          foodSecurity %>%
+            group_by(educationLevel, foodSecurity) %>%
+            summarize(n = n()) %>%
+            mutate(perc = 100*n/sum(n)) %>% 
+            ggplot(aes(x = educationLevel, y = perc)) +
+              geom_bar(stat = "identity") +
+              facet_grid(~ foodSecurity) +
+              coord_flip()
+        } else {
+        if(input$otherPlotVariable == "Household Recieved SNAP Benefits"){
+          foodSecurity %>%
+            group_by(receivedSNAP, foodSecurity) %>%
+            summarize(n = n()) %>%
+            mutate(perc = 100*n/sum(n)) %>%
+            ggplot(aes(x = receivedSNAP, y = perc)) +
+              geom_bar(stat = "identity") +
+              facet_grid(~ foodSecurity) +
+              coord_flip()
+        }}}}}}}}}}}}}  # Close out nested if/else statements
+      }
+    }
+  })
+  
+  observeEvent(input$createMosaicPlot, {
+    output$adjustMosaicPlotHeight <- renderUI({
+      sliderInput("height",
+                  label = "Adjust plot height:",
+                  min = 500, max = 900, value = 700)
     })
-    
-    output$otherPlot <- renderPlot({
-        if(input$summaryType == "Graphical"){
-            if(input$plotType == "Bar Plot - Horizontal"){
-                if(input$otherPlotVariable == "Sex"){
-                    # Attempted to use a function to create this plot, but 
-                    # `eval(parse(text = "..."))` wasn't compatible with 
-                    # `group_by()`.  More research needed.
-                    foodSecurity %>% group_by(sex, foodSecurity) %>%
-                        summarize(n = n()) %>% 
-                        mutate(perc = 100*n/sum(n)) %>% 
-                        ggplot(aes(x = sex, y = perc)) +
-                        geom_bar(stat = "identity") +
-                        facet_grid(~ foodSecurity) + 
-                        coord_flip()
-                } else {
-                if(input$otherPlotVariable == "Race"){
-                    foodSecurity %>% group_by(race, foodSecurity) %>%
-                        summarize(n = n()) %>% 
-                        mutate(perc = 100*n/sum(n)) %>% 
-                        ggplot(aes(x = race, y = perc)) +
-                        geom_bar(stat = "identity") +
-                        facet_grid(~ foodSecurity) + 
-                        coord_flip()
-                } else {
-                if(input$otherPlotVariable == "Hispanic Origin"){
-                    foodSecurity %>% group_by(hispanicOrigin, foodSecurity) %>%
-                        summarize(n = n()) %>% 
-                        mutate(perc = 100*n/sum(n)) %>% 
-                        ggplot(aes(x = hispanicOrigin, y = perc)) +
-                        geom_bar(stat = "identity") +
-                        facet_grid(~ foodSecurity) + 
-                        coord_flip()
-                } else {
-                if(input$otherPlotVariable == "US Citizenship"){
-                    foodSecurity %>% group_by(citizenship, foodSecurity) %>%
-                        summarize(n = n()) %>% 
-                        mutate(perc = 100*n/sum(n)) %>% 
-                        ggplot(aes(x = citizenship, y = perc)) +
-                        geom_bar(stat = "identity") +
-                        facet_grid(~ foodSecurity) + 
-                        coord_flip()
-                } else {
-                if(input$otherPlotVariable == "Type of Household"){
-                    foodSecurity %>% group_by(typeHH, foodSecurity) %>%
-                        summarize(n = n()) %>% 
-                        mutate(perc = 100*n/sum(n)) %>% 
-                        ggplot(aes(x = typeHH, y = perc)) +
-                        geom_bar(stat = "identity") +
-                        facet_grid(~ foodSecurity) + 
-                        coord_flip()
-                } else {
-                if(input$otherPlotVariable == "Employment Status"){
-                    foodSecurity %>% group_by(employStatus, foodSecurity) %>%
-                        summarize(n = n()) %>% 
-                        mutate(perc = 100*n/sum(n)) %>% 
-                        ggplot(aes(x = employStatus, y = perc)) +
-                        geom_bar(stat = "identity") +
-                        facet_grid(~ foodSecurity) + 
-                        coord_flip()
-                } else {
-                if(input$otherPlotVariable == "Annual Household Income"){
-                    foodSecurity %>% group_by(annualHHIncome, foodSecurity) %>%
-                        summarize(n = n()) %>% 
-                        mutate(perc = 100*n/sum(n)) %>% 
-                        ggplot(aes(x = annualHHIncome, y = perc)) +
-                        geom_bar(stat = "identity") +
-                        facet_grid(~ foodSecurity) + 
-                        coord_flip()
-                } else {
-                if(input$otherPlotVariable == "Marital Status"){
-                    foodSecurity %>% group_by(maritalStatus, foodSecurity) %>%
-                        summarize(n = n()) %>% 
-                        mutate(perc = 100*n/sum(n)) %>% 
-                        ggplot(aes(x = maritalStatus, y = perc)) +
-                        geom_bar(stat = "identity") +
-                        facet_grid(~ foodSecurity) + 
-                        coord_flip()
-                } else {
-                if(input$otherPlotVariable == "Living Quarters"){
-                    foodSecurity %>% group_by(livingQuarters, foodSecurity) %>%
-                        summarize(n = n()) %>% 
-                        mutate(perc = 100*n/sum(n)) %>% 
-                        ggplot(aes(x = livingQuarters, y = perc)) +
-                        geom_bar(stat = "identity") +
-                        facet_grid(~ foodSecurity) + 
-                        coord_flip()
-                } else {
-                if(input$otherPlotVariable == "Education Level"){
-                    foodSecurity %>% group_by(educationLevel, foodSecurity) %>%
-                        summarize(n = n()) %>% 
-                        mutate(perc = 100*n/sum(n)) %>% 
-                        ggplot(aes(x = educationLevel, y = perc)) +
-                        geom_bar(stat = "identity") +
-                        facet_grid(~ foodSecurity) + 
-                        coord_flip()
-                } else {
-                if(input$otherPlotVariable == "Household Recieved SNAP Benefits"){
-                    foodSecurity %>% group_by(receivedSNAP, foodSecurity) %>%
-                        summarize(n = n()) %>% 
-                        mutate(perc = 100*n/sum(n)) %>% 
-                        ggplot(aes(x = receivedSNAP, y = perc)) +
-                        geom_bar(stat = "identity") +
-                        facet_grid(~ foodSecurity) + 
-                        coord_flip()
-                }}}}}}}}}}}
-            }
-        }
+    output$adjustMosaicPlotWidth <- renderUI({
+      sliderInput("width",
+                  label = "Adjust plot width:", 
+                  min = 600, max = 1200, value = 900)
     })
-    
-    observeEvent(input$createMosaicPlot, {
-      output$adjustMosaicPlotHeight <- renderUI({
-        sliderInput("height", "Adjust plot height:",
-                    min = 500, max = 900, value = 700)
-      })
-      output$adjustMosaicPlotWidth <- renderUI({
-        sliderInput("width", "Adjust plot width:", 
-                    min = 600, max = 1200, value = 900)
-      })
       
     output$mosaicPlot <- renderPlot(
       width = function() input$width,
@@ -320,6 +358,14 @@ shinyServer(function(input, output, session) {
                        xlab = "Hispanic Origin",
                        ylab = "Food Security")
           } else {
+          if(input$mosaicPlotVariable == "Age"){
+            mosaicplot(~ foodSecurityNR$age + foodSecurityNR$foodSecurity,
+                       shade = TRUE,  # Add color to plot
+                       las = 2,  # Print variable names vertically
+                       main = "'Age' vs. 'Food Security'",
+                       xlab = "Age",
+                       ylab = "Food Security")
+          } else {
           if(input$mosaicPlotVariable == "US Citizenship"){
             mosaicplot(~ foodSecurityNR$citizenship + foodSecurityNR$foodSecurity,
                        shade = TRUE,  # Add color to plot
@@ -334,6 +380,14 @@ shinyServer(function(input, output, session) {
                        las = 2,  # Print variable names vertically
                        main = "'Type of Household' vs. 'Food Security'",
                        xlab = "Type of Household",
+                       ylab = "Food Security")
+          } else {
+          if(input$mosaicPlotVariable == "Number of Household Members"){
+            mosaicplot(~ foodSecurityNR$numHHMembers + foodSecurityNR$foodSecurity,
+                       shade = TRUE,  # Add color to plot
+                       las = 2,  # Print variable names vertically
+                       main = "'Number of Household Members' vs. 'Food Security'",
+                       xlab = "Number of Household Members",
                        ylab = "Food Security")
           } else {
           if(input$mosaicPlotVariable == "Employment Status"){
@@ -383,12 +437,12 @@ shinyServer(function(input, output, session) {
                        main = "'Household Recieved SNAP Benefits' vs. 'Food Security'",
                        xlab = "Household Recieved SNAP Benefits",
                        ylab = "Food Security")
-          }}}}}}}}}}}
+          }}}}}}}}}}}}}  # Close out nested if/else statements
         }
       }
     })
-    })
-    
+  })
+  
     observeEvent(input$runMLM, {
         output$summaryMulti <- renderPrint({
             
