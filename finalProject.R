@@ -301,15 +301,14 @@ foodSecurityNR <- foodSecurity %>%
                   filter(foodSecurity != "No Response") #%>%
                   #filter(race == c("White", "Black", "American Indian, Alaskan Native", "Asian", "Hawaiian/Pacific Islander"))
 foodSecurityNR$foodSecurity <- droplevels(foodSecurityNR$foodSecurity)
-foodSecurityNR$race <- droplevels(foodSecurityNR$race)
 levels(foodSecurityNR$foodSecurity) <- c("Secure", "Secure", "Insecure", 
                                          "Insecure")
-levels(foodSecurityNR$race) <- c("White", "Black", "American Indian, Alaskan Native",
-                               "Asian", "Hawaiian/Pacific Islander",
-                               "Two-Race Combination", "Two-Race Combination",
-                               "Two-Race Combination", "Two-Race Combination",
-                               "Two-Race Combination", "Two-Race Combination", 
-                               "Two-Race Combination",
-                               "Three or More Race Combinations")
-
+#levels(foodSecurityNR$race) <- c("White", "Black", "American Indian, Alaskan Native",
+#                               "Asian", "Hawaiian/Pacific Islander",
+#                               "Two-Race Combination", "Two-Race Combination",
+#                               "Two-Race Combination", "Two-Race Combination",
+#                               "Two-Race Combination", "Two-Race Combination", 
+#                               "Two-Race Combination",
+#                               "Three or More Race Combinations")
+#foodSecurityNR$race <- droplevels(foodSecurityNR$race)
 

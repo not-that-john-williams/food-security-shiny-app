@@ -10,6 +10,7 @@ library(rpart)
 library(rattle)
 library(ranger)
 library(graphics)
+library(sjPlot)
 
 # Function to create horizontal bar plots
 createBarPlot <- function(group, name, data, leg.pos = "none"){
@@ -114,12 +115,46 @@ shinyServer(function(input, output, session) {
     }
   })
   
+  # Using `sjPlot` package, create a contingency table  for two specified 
+  # categorical variables.
+  output$simpleTable <- renderUI({
+    df = "foodSecurity$"
+    row <- paste0(df, input$simpleVar)
+    col <- paste0(df, "foodSecurity")
+    simpleCT <- tab_xtab(var.row = eval(parse(text = row)),
+                         var.col = eval(parse(text = col)),
+                         var.labels = c(input$simpleVar, "foodSecurity"),
+                         title = paste0("Cross Tabulation of foodSecurity vs. ",
+                                        input$simpleVar),
+                         show.row.prc = TRUE,
+                         show.summary = FALSE,
+                         emph.total = TRUE)
+    HTML(simpleCT$page.complete)
+  })
+  
+  # Using `sjPlot` package, create a contingency table  for two specified 
+  # categorical variables.
+  output$simpleTableExclude <- renderUI({
+    df = "foodSecurityNR$"
+    row <- paste0(df, input$simpleVar)
+    col <- paste0(df, "foodSecurity")
+    simpleCT <- tab_xtab(var.row = eval(parse(text = row)),
+                         var.col = eval(parse(text = col)),
+                         var.labels = c(input$simpleVar, "foodSecurity"),
+                         title = paste0("Cross Tabulation of foodSecurity vs. ",
+                                        input$simpleVar),
+                         show.row.prc = TRUE,
+                         show.summary = FALSE,
+                         emph.total = TRUE)
+    HTML(simpleCT$page.complete)
+  })
+  
   # Create a title for the contingency table
   output$contingencyTableTitle <- renderUI({
     h3("Contingency Table of ", input$contingencyVar1,
        " vs. ", input$contingencyVar2)
   })
-
+  
   # Using `gmodels` package, create a contingency table  for two specified 
   # categorical variables.
   output$contingencyTable <- renderPrint({

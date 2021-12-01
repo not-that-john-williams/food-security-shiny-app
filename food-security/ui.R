@@ -122,7 +122,8 @@ shinyUI(navbarPage(
           radioButtons("numericalType",
             label = "Select one:",
             choices = c("Frequency Tables", 
-                        "Contingency Tables")
+                        "Contingency Tables - Simple",
+                        "Contingency Tables - Detailed")
           ),
           conditionalPanel(condition = "input.numericalType == 'Frequency Tables'",
             selectInput("freqVariable",
@@ -130,14 +131,23 @@ shinyUI(navbarPage(
               choices = factorVariables
             )
           ),
-          conditionalPanel(condition = "input.numericalType == 'Contingency Tables'",
+          conditionalPanel(condition = "input.numericalType == 'Contingency Tables - Simple'",
+            selectInput("simpleVar",
+              label = "Select first variable:",
+              choices = names(foodSecurity)[-1]  # Excluding 'Food Security'
+            ),
+            checkboxInput("excludeNoResponseFromSimpleTable",
+                          label = "Change 'Food Security' to a binary factor; exclude 'No Response'"
+            )
+          ),
+          conditionalPanel(condition = "input.numericalType == 'Contingency Tables - Detailed'",
             selectInput("contingencyVar1",
               label = "Select first variable:",
               choices = names(foodSecurity)
             ),
             selectInput("contingencyVar2",
               label = "Select second variable:",
-              choices = names(foodSecurity)
+              choices = names(foodSecurity)[-1]  # Excluding 'Food Security'
             )
           )
         ),
@@ -155,7 +165,8 @@ shinyUI(navbarPage(
               choices = factorVariables[-1]  # Excluding 'Food Security'
             ),
             checkboxInput("excludeNoResponseFromBarPlot",
-              label = "Change 'Food Security' to a binary factor; exclude 'No Response'")
+              label = "Change 'Food Security' to a binary factor; exclude 'No Response'"
+            )
           ),
           conditionalPanel(condition = "input.plotType == 'Bar Plot - Horizontal'",
             selectInput("otherPlotVariable",
@@ -182,7 +193,15 @@ shinyUI(navbarPage(
             htmlOutput("freqTableTitle"),
             DT::dataTableOutput("freqTable")
           ),
-          conditionalPanel(condition = "input.numericalType == 'Contingency Tables'",
+          conditionalPanel(condition = "input.numericalType == 'Contingency Tables - Simple'",
+            conditionalPanel(condition = "input.excludeNoResponseFromSimpleTable == 0",
+              htmlOutput("simpleTable")
+            ),
+            conditionalPanel(condition = "input.excludeNoResponseFromSimpleTable == 1",
+              htmlOutput("simpleTableExclude")
+            )
+          ),
+          conditionalPanel(condition = "input.numericalType == 'Contingency Tables - Detailed'",
             htmlOutput("contingencyTableTitle"),
             verbatimTextOutput("contingencyTable")
           ),
