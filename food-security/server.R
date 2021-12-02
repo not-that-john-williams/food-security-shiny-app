@@ -12,6 +12,21 @@ library(ranger)
 library(graphics)
 library(sjPlot)
 
+variableNames <- list("foodSecurity" = "Food Security",
+                      "sex" = "Sex",
+                      "race" = "Race",
+                      "hispanicOrigin" = "Hispanic Origin",
+                      "age" = "Age",
+                      "citizenship" = "US Citizenship",
+                      "typeHH" = "Type of Household",
+                      "numHHMembers" = "Number of Household Members",
+                      "employStatus" = "Employment Status",
+                      "annualHHIncome" = "Annual Household Income",
+                      "maritalStatus" = "Marital Status",
+                      "livingQuarters" = "Living Quarters",
+                      "educationLevel" = "Education Level",
+                      "receivedSNAP" = "Household Received SNAP Benefits")
+
 # Function to create horizontal bar plots
 createBarPlot <- function(group, name, data, leg.pos = "none"){
   barPlot <- data %>% 
@@ -315,7 +330,8 @@ shinyServer(function(input, output, session) {
               facet_grid(~ foodSecurity) +
               labs(x = "Race", 
                    y = "Percent", 
-                   title = "Relative Frequencies of 'Food Security' by 'Race'") +
+                   title = paste0("Relative Frequencies of 'Food Security' by ",
+                                  "'Race'")) +
               coord_flip()
         } else {
         if(input$otherPlotVariable == "Hispanic Origin"){
@@ -602,149 +618,195 @@ shinyServer(function(input, output, session) {
     })
   })
   
-    observeEvent(input$runMLM, {
-        output$summaryMulti <- renderPrint({
-            
-            # Create a Progress object
-            progress <- Progress$new()
-            # Make sure it closes when we exit this reactive, even if there's an error.
-            on.exit(progress$close())
-            # Set the message to the user while cross-validation is running.
-            progress$set(message = "Calculation in progress",
-                         detail = "This may take a while...")
-            
-            # Remove "No Response" from `foodSecurity`
-            data <- foodSecurity %>% filter(foodSecurity != "No Response")
-            data$foodSecurity <- droplevels(data$foodSecurity)
-            
-            vars <- unlist(input$multiModelVars)
-            trainIndex <- createDataPartition(data$foodSecurity,
-                                            p = input$splitPercent/100, 
-                                            list = FALSE, 
-                                            times = 1)
-            trainData <- data[ trainIndex,]
-            testData  <- data[-trainIndex,]
-            multinomFit <- train(foodSecurity ~ ., 
-                                 data = trainData[,c(c("foodSecurity"), vars)],
-                                 method = 'multinom',
-                                 trControl = trainControl(method = "cv", 
-                                                          number = input$numFolds),
-                                 # Do not print output from the cross validation
-                                 trace = FALSE,
-                                 # Exclude any observations with missing data
-                                 na.action = na.exclude)
-            summary(multinomFit)
-        })
+  observeEvent(input$runMLM, {
+    output$summaryMulti <- renderPrint({
+    
+      # Create a Progress object
+      progress <- Progress$new()
+      # Ensure the Progress object closes upon exiting this reactive, even if
+      # there is an error.
+      on.exit(progress$close())
+      # Set the message to the user while cross-validation is running.
+      progress$set(message = "Calculation in progress",
+                   detail = "This may take a while...")
+      
+      # Remove "No Response" from `foodSecurity`
+      data <- foodSecurity %>% filter(foodSecurity != "No Response")
+      data$foodSecurity <- droplevels(data$foodSecurity)
+      
+      # Grab the predictor variables to be used in the model from the user input
+      vars <- unlist(input$multiModelVars)
+      
+      # Partition the data into a training set and test set
+      trainIndex <- createDataPartition(data$foodSecurity,
+                                        p = input$splitPercent/100, 
+                                        list = FALSE, 
+                                        times = 1)
+      trainData <- data[ trainIndex,]
+      testData  <- data[-trainIndex,]
+      
+      # Fit a Multinomial Logistic Regression Model using cross validation
+      multinomFit <- train(foodSecurity ~ ., 
+                           data = trainData[,c(c("foodSecurity"), vars)],
+                           method = 'multinom',
+                           trControl = trainControl(method = "cv", 
+                                                    number = input$numFolds),
+                           # Do not print output from the cross validation
+                           trace = FALSE,
+                           # Exclude any observations with missing data
+                           na.action = na.exclude)
+      
+      # Print a summary of the Multinomial Logistic Regression Model
+      summary(multinomFit)
     })
-    
-    observeEvent(input$runClassTree, {
-        output$summaryClassTree <- renderPlot({
-            
-            # Create a Progress object
-            progress <- Progress$new()
-            # Make sure it closes when we exit this reactive, even if there's an error.
-            on.exit(progress$close())
-            # Set the message to the user while cross-validation is running.
-            progress$set(message = "Calculation in progress",
-                         detail = "This may take a while...")
-            
-            # Remove "No Response" from `foodSecurity`
-            data <- foodSecurity %>% filter(foodSecurity != "No Response")
-            data$foodSecurity <- droplevels(data$foodSecurity)
-            
-            vars <- unlist(input$classTreeVars)
-            trainIndex <- createDataPartition(data$foodSecurity,
-                                              p = input$splitPercent/100, 
-                                              list = FALSE, 
-                                              times = 1)
-            trainData <- data[ trainIndex,]
-            testData  <- data[-trainIndex,]
-            treeFit <- train(foodSecurity ~ ., 
-                             data = trainData[,c(c("foodSecurity"), vars)],
-                             method = 'rpart',
-                             trControl = trainControl(method = "cv", 
-                                                      number = input$numFolds),
-                             tuneGrid = expand.grid(cp = seq(0, 0.1, by = 0.0001)),
-                             # Exclude any observations with missing data
-                             na.action = na.exclude)
-            rattle::fancyRpartPlot(treeFit$finalModel, tweak = 2)
-        })
+  })
+  
+  observeEvent(input$runClassTree, {
+    output$summaryClassTree <- renderPlot({
+      
+      # Create a Progress object
+      progress <- Progress$new()
+      # Ensure the Progress object closes upon exiting this reactive, even if
+      # there is an error.
+      on.exit(progress$close())
+      # Set the message to the user while cross-validation is running.
+      progress$set(message = "Calculation in progress",
+                   detail = "This may take a while...")
+      
+      # Remove "No Response" from `foodSecurity`
+      data <- foodSecurity %>% filter(foodSecurity != "No Response")
+      data$foodSecurity <- droplevels(data$foodSecurity)
+      
+      # Grab the predictor variables to be used in the model from the user input
+      vars <- unlist(input$classTreeVars)
+      
+      # Partition the data into a training set and test set
+      trainIndex <- createDataPartition(data$foodSecurity,
+                                        p = input$splitPercent/100, 
+                                        list = FALSE, 
+                                        times = 1)
+      trainData <- data[ trainIndex,]
+      testData  <- data[-trainIndex,]
+      
+      # Fit a Classification Tree Model using cross validation
+      treeFit <- train(foodSecurity ~ ., 
+                       data = trainData[,c(c("foodSecurity"), vars)],
+                       method = 'rpart',
+                       trControl = trainControl(method = "cv", 
+                                                number = input$numFolds),
+                       tuneGrid = expand.grid(cp = seq(0, 0.1, by = 0.0001)),
+                       # Exclude any observations with missing data
+                       na.action = na.exclude)
+      
+      # If the Classification Tree is only one node, produce a warning message.
+      validate(
+        need(try(rattle::fancyRpartPlot(treeFit$finalModel, tweak = 2)),
+             paste0("Classification Tree is a single node. Please select ",
+                    "additional predictor variables for the model."))
+      )
+      
+      # Output a plot of the Classification Tree
+      rattle::fancyRpartPlot(treeFit$finalModel, tweak = 2)
     })
-    
-    observeEvent(input$runForest, {
-        output$summaryForest <- renderPlot({
-            
-            # Create a Progress object
-            progress <- Progress$new()
-            # Make sure it closes when we exit this reactive, even if there's an error.
-            on.exit(progress$close())
-            # Set the message to the user while cross-validation is running.
-            progress$set(message = "Calculation in progress",
-                         detail = "This may take a while...")
-            
-            # Remove "No Response" from `foodSecurity`
-            data <- foodSecurity %>% filter(foodSecurity != "No Response")
-            data$foodSecurity <- droplevels(data$foodSecurity)
-            
-            vars <- unlist(input$forestVars)
-            trainIndex <- createDataPartition(data$foodSecurity,
-                                              p = input$splitPercent/100, 
-                                              list = FALSE, 
-                                              times = 1)
-            trainData <- data[ trainIndex,]
-            testData  <- data[-trainIndex,]
-            forestFit <- train(foodSecurity ~ ., 
-                             data = trainData[,c(c("foodSecurity"), vars)],
-                             method = 'ranger',
-                             # Needed to retrieve variable importance 
-                             importance = "permutation",
-                             trControl = trainControl(method = "cv", 
-                                                      number = input$numFolds),
-                             #tuneGrid = expand.grid(mtry = c(1:15)),
-                             # Do not print output from the cross validation
-                             # Exclude any observations with missing data
-                             na.action = na.exclude)
-            temp <- varImp(forestFit)
-            importance <- as_tibble(temp$importance, rownames = "variable")
-            importance <- importance %>% arrange(desc(Overall))
-            ggplot(importance[1:20,], aes(x = reorder(variable, Overall), 
-                                          y = Overall, fill = Overall)) +
-                geom_col() + coord_flip() + theme(legend.position = "none") +
-                labs(x = "Predictors",  
-                     y = "Importance %", 
-                     title ="Importance of Top 20 Predictors")
-        })
+  })
+  
+  observeEvent(input$runForest, {
+    output$summaryForest <- renderPlot({
+     
+      # Create a Progress object
+      progress <- Progress$new()
+      # Ensure the Progress object closes upon exiting this reactive, even if
+      # there is an error.
+      on.exit(progress$close())
+      # Set the message to the user while cross-validation is running.
+      progress$set(message = "Calculation in progress",
+                   detail = "This may take a while...")
+      
+      # Remove "No Response" from `foodSecurity`
+      data <- foodSecurity %>% filter(foodSecurity != "No Response")
+      data$foodSecurity <- droplevels(data$foodSecurity)
+      
+      # Grab the predictor variables to be used in the model from the user input
+      vars <- unlist(input$forestVars)
+      
+      # Partition the data into a training set and test set
+      trainIndex <- createDataPartition(data$foodSecurity,
+                                        p = input$splitPercent/100, 
+                                        list = FALSE, 
+                                        times = 1)
+      trainData <- data[ trainIndex,]
+      testData  <- data[-trainIndex,]
+      
+      # Fit a Random Forest Model using cross validation
+      forestFit <- train(foodSecurity ~ ., 
+                         data = trainData[,c(c("foodSecurity"), vars)],
+                         method = 'ranger',
+                         # Needed to retrieve variable importance 
+                         importance = "permutation",
+                         trControl = trainControl(method = "cv", 
+                                                  number = input$numFolds),
+                         #tuneGrid = expand.grid(mtry = c(1:15)),
+                         # Do not print output from the cross validation
+                         # Exclude any observations with missing data
+                         na.action = na.exclude)
+      temp <- varImp(forestFit)
+      importance <- as_tibble(temp$importance, rownames = "variable")
+      importance <- importance %>% arrange(desc(Overall))
+      
+      # Output a plot of the variable importance from the Random Forest Model
+      # (Top 20 predictor variables only)
+      ggplot(importance[1:20,],
+             aes(x = reorder(variable, Overall), 
+                 y = Overall, fill = Overall)) +
+        geom_col() +
+        coord_flip() +
+        theme(legend.position = "none") +
+        labs(x = "Predictors",  
+             y = "Importance %", 
+             title ="Importance of Top 20 Predictors")
     })
-    
-    
-    # Adapted from https://github.com/RiveraDaniel/Regression/blob/83df18abcb632f60f3c381e77987ff6fbbe031db/server.R
+  })
+  
+  observeEvent(input$viewButton, {
+    output$saveButtonTitle <- renderUI({
+      h5(strong("After filtering, click the button below to save the data set ",
+                "to a .csv file:"))
+    })
+  })
+  
+  # Adapted from the 'server.R' file located at
+  # https://github.com/RiveraDaniel/Regression/
+  
+  selectedColumns <- eventReactive(input$viewButton, {
+    input$variablesPicked
+  })
+  
+  observeEvent(input$viewButton, {
+    colNames <- unlist(variableNames[selectedColumns()])
+    names(colNames) <- NULL
     output$rawData <- DT::renderDataTable(
-        DT::datatable(foodSecurity,
-            options = list(lengthMenu = list(c(5, 15, 20),c('5', '15', '20')),
-                           pageLength = 10,
-                           initComplete = JS(
-                           "function(settings, json) {",
-                           "$(this.api().table().header()).css({",
-                           "'background-color': 'moccasin', ",
-                           "'color': '1c1b1b'});}"),
-                           columnDefs = list(list(className = 'dt-center',
-                                                  targets="_all")#,
-                                             #list(targets = list(0,2),
-                                                  #width = '70', visible = TRUE),
-                                             #list(targets = list(1,3,6,7,8),
-                                                  #width = '150', visible = TRUE),
-                                             #list(targets = list(4,5),
-                                                  #width = '90', visible = TRUE)
-                                             ),
-                           autoWidth = TRUE,
-                           scrollX = TRUE
-                          ),
-            filter = "top",
-            selection = 'multiple',
-            style = 'bootstrap',
-            class = 'cell-border stripe',
-            rownames = FALSE,
-            colnames = c(response, predictors)
-        ))
+      DT::datatable(foodSecurity[,selectedColumns()],
+        options = list(lengthMenu = list(c(5, 15, 20),c('5', '15', '20')),
+                       pageLength = 10,
+                       initComplete = JS(
+                       "function(settings, json) {$(this.api().table()",
+                       ".header()).css({'background-color': 'moccasin', ",
+                       "'color': '1c1b1b'});}"),
+                       columnDefs = list(list(className = 'dt-center',
+                                              targets="_all")),
+                       autoWidth = TRUE,
+                       scrollX = TRUE,
+                       dom = 'Bfrtip',
+                       buttons = 'csv'),
+        extensions = "Buttons",
+        filter = "top",
+        selection = 'multiple',
+        style = 'bootstrap',
+        class = 'cell-border stripe',
+        rownames = FALSE,
+        colnames = colNames
+      )
+    )
+  })
 
 })

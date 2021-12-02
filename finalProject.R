@@ -12,7 +12,8 @@ cps_foodsec <- getCensus(
   name = "2020/cps/foodsec/dec",
   vars = c("HRFS12MD", "PESEX", "PTDTRACE", "PEHSPNON", "PRTAGE", "PRCITSHP",
            "HRHTYPE", "HRNUMHOU", "PEMLR", "HEFAMINC", "PRMARSTA", "HEHOUSUT",
-           "PEEDUCA", "HESP1", "HESP8", "HESP6", "HETS8OU"))
+           "PEEDUCA", "HESP1"#, "HESP8", "HESP6", "HETS8OU"
+           ))
 cps_foodsec
 
 
