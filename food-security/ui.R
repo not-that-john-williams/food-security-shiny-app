@@ -259,7 +259,7 @@ shinyUI(navbarPage(
       )
     ),
     
-    # Modleing Section
+    # Modeling Section
     navbarMenu(
       
       # Add a title.
@@ -269,12 +269,60 @@ shinyUI(navbarPage(
       tabPanel(
         title = "Modeling Info",
         
+        wellPanel(
+          h4(strong("Select a modeling approach to learn more about it:")
+          ),
+          radioButtons("infoType", 
+                       label = "", 
+                       choices = c("Multinomial Logistic Regression",
+                                   "Classification Tree",
+                                   "Random Forest"), 
+                       selected = character(0)
+          )
+        ),
+        
         mainPanel(fluidPage(
+          conditionalPanel(condition = "input.infoType == 'Multinomial Logistic Regression'",
+            h4(strong(tags$u("Multinomial Logistic Regression"))
+            ),
+            fluidRow(
+              column(width = 5, offset = 1, {
+                h4("Advantages")
+              }),
+              column(width = 4, offset = 1, {
+                h4("Drawbacks")
+              })
+            )
+          ),
+          conditionalPanel(condition = "input.infoType == 'Classification Tree'",
+            h4(strong(tags$u("Classification Tree"))
+            ),
+            fluidRow(
+              column(width = 5, offset = 1, {
+                h4("Advantages")
+              }),
+              column(width = 4, offset = 1, {
+                h4("Drawbacks")
+              })
+            )
+          ),
+          conditionalPanel(condition = "input.infoType == 'Random Forest'",
+            h4(strong(tags$u("Random Forest"))
+            ),
+            fluidRow(
+              column(width = 5, offset = 1, {
+                h4("Advantages")
+              }),
+              column(width = 4, offset = 1, {
+                h4("Drawbacks")
+              })
+            )
+          )
+        ))
           # Explain the 3 modeling approaches
           # Benefits of each
           # Drawbacks of each
           # Include equations using `mathJax`
-        ))
       ),
       
       # Add the Model Fitting tab.
