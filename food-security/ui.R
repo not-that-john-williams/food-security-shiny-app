@@ -283,39 +283,130 @@ shinyUI(navbarPage(
         
         mainPanel(fluidPage(
           conditionalPanel(condition = "input.infoType == 'Multinomial Logistic Regression'",
-            h4(strong(tags$u("Multinomial Logistic Regression"))
+            withMathJax(),
+            h3(strong(tags$u("Logistic Regression"))
             ),
-            fluidRow(
-              column(width = 5, offset = 1, {
-                h4("Advantages")
-              }),
-              column(width = 4, offset = 1, {
-                h4("Drawbacks")
-              })
+            "Logistic Regression is a type of regression analysis, a ",
+            "predictive modeling technique which is used to find the ",
+            "relationship between a binary response and one or more ",
+            "predictors.  When the response has more than two categorical ",
+            "levels, the analysis is called Multinomial Logistic Regression.",
+            br(),
+            h4("Nuts and Bolts of the Model:"),
+            helpText("Consider a binary response variable \\(Y\\) with ",
+            "predictors \\(X_i\\) for \\(i = 1, ..., n\\).  Logistic ",
+            "Regression is based on the assumption that the probability of ",
+            "\\(Y\\) given \\(X_i = x_i\\) for all \\(i = 1, ..., n\\) can be ",
+            "expressed as"),
+            helpText("$$P(Y) = \\frac{e^{g(x)}}{1+e^{g(x)}}$$"),
+            helpText("where \\(g(x)\\) is a function of one or more of the ",
+            "\\(x_i\\)'s.  One of the most frequently used \\(g(x)\\) is"),
+            helpText("$$g(x) = \\beta_0 + \\beta_1x_1 + ... + \\beta_nx_n$$"),
+            helpText("where \\(\\beta_0\\) through \\(\\beta_n\\) are unknown ",
+            "parameters.  The resulting model for \\(P(Y)\\) takes the form"),
+            helpText("$$P(Y) = \\frac{e^{\\beta_0 + \\beta_1x_1 +...+ ",
+            "\\beta_nx_n}}{1+e^{\\beta_0 + \\beta_1x_1 +...+ \\beta_nx_n}}$$"),
+            br(),
+            h4("Example:"),
+            "Let's train a Logistic Model on 70% of the 'Food Security' data ",
+            "where the response variable 'Food Security' is measured as ",
+            "'Secure' or 'Insecure'.  'Secure' will be the reference class ",
+            "for the response.  'Hispanic Origin' will be the only predictor, ",
+            "\\(x\\).  With 'Hispanic' as the reference class, \\(x = 0\\) if ",
+            "an individual is of Hispanic origin, and \\(x = 1\\) otherwise.  ",
+            "After fitting, we get the following system of equations as a ",
+            "possible model:",
+            helpText("$$P(\\text{Food Security} = \\text{Insecure}) = ",
+            "\\frac{e^{-1.448-0.803x}}{1+e^{-1.448-0.803x}} = \\cases{0.190  ",
+            "& \\text{if Hispanic} \\cr 0.095  & \\text{if non-Hispanic}}$$"),
+            helpText("$$P(\\text{Food Security} = \\text{Secure}) = 1 - ",
+            "P(\\text{Food Security} = \\text{Insecure}) = \\cases{0.836  & ",
+            "\\text{if Hispanic} \\cr 0.905  & \\text{if non-Hispanic}}$$"),
+            br(),
+            h4("Prediction:"),
+            "Logistic Regression models can be useful for making ",
+            "predictions.  For given predictor values, the predicted response ",
+            "is the class with probability greater than 50% (or with greatest ",
+            "probability in Multinomial Lopgistic Regression).  The example ",
+            "above, however, isn't great at predicting food security.  ",
+            "Whether an individual is Hispanic or non-Hispanic, the model ",
+            "gives a greater than 50% probability that the individual is food ",
+            "secure.  But all is not lost, Logistic Regression allows quick ",
+            "insights into the relationship of predictors to the response.  ",
+            "Under this model, we can conclude that the probability that ",
+            "Hispanics are food insecure is 2 times higher than non-Hispanics.",
+            h4("Advantages:"),
+            tags$ul(
+              tags$li("Easy to interpret."),
+              tags$li("Efficient to train."),
+              tags$li("Useful for probability estimation."),
+              tags$li("Provides the direction of the association between a",
+                      "predictor and the response.")
+            ),
+            h4("Drawbacks:"),
+            tags$ul(
+              tags$li("Assumes linearity between the response and predictors."),
+              tags$li("Difficult to capture complex relationships and to ",
+                      "discover interaction effects among predictors."),
+              tags$li("There should be no high correlations among the ",
+                      "predictors."),
+              tags$li("Sensitive to outliers.")
             )
           ),
+          
           conditionalPanel(condition = "input.infoType == 'Classification Tree'",
-            h4(strong(tags$u("Classification Tree"))
+            h3(strong(tags$u("Classification Tree"))
             ),
             fluidRow(
-              column(width = 5, offset = 1, {
-                h4("Advantages")
-              }),
-              column(width = 4, offset = 1, {
-                h4("Drawbacks")
-              })
+              column(width = 5, offset = 1,
+                h4("Advantages"),
+                tags$ul(
+                  tags$li("Simple to understand and easy to visualize."),
+                  tags$li("Requires minimal data cleaning."),
+                  tags$li("Does not require normality assumptions."),
+                  tags$li("Can handle both numerical and catergorical data."),
+                  tags$li("Works well with dichotomous and non-dichotomous ",
+                          "response variables.")
+                )
+              ),
+              column(width = 4, offset = 1,
+                h4("Drawbacks"),
+                tags$ul(
+                  tags$li("Can be overly complex leading to overfitting."),
+                  tags$li("Heavily influenced by small variations in data."),
+                  tags$li("Not good for extrapolation."),
+                  tags$li("No optimal algorithm; computationaly intensive.")
+                )
+              )
             )
           ),
           conditionalPanel(condition = "input.infoType == 'Random Forest'",
-            h4(strong(tags$u("Random Forest"))
+            h3(strong(tags$u("Random Forest")),
+               "Regularly provides more accurate predictions than a single descision tree"
             ),
             fluidRow(
-              column(width = 5, offset = 1, {
-                h4("Advantages")
-              }),
-              column(width = 4, offset = 1, {
-                h4("Drawbacks")
-              })
+              column(width = 5, offset = 1,
+                h4("Advantages"),
+                tags$ul(
+                  tags$li("Easily handles a large data set with a multitude of",
+                          "variables."),
+                  tags$li("can automatically handle missing values."),
+                  tags$li("Reduced risk of overfitting."),
+                  tags$li("Robust to outliers."),
+                  tags$li("Easy to evaluate variable importance, or ",
+                          "contribution, to the model.")
+                )
+              ),
+              column(width = 4, offset = 1,
+                h4("Drawbacks"),
+                tags$ul(
+                  tags$li("Not easy to interpret."),
+                  tags$li("Time-consuming algorithm; parallel processing can ",
+                          "speed up computation times."),
+                  tags$li("Does not work well when data is sparse."),
+                  tags$li("Not good for extrapolation.")
+                )
+              )
             )
           )
         ))

@@ -631,24 +631,25 @@ shinyServer(function(input, output, session) {
                    detail = "This may take a while...")
       
       # Remove "No Response" from `foodSecurity`
-      data <- foodSecurity %>% filter(foodSecurity != "No Response")
-      data$foodSecurity <- droplevels(data$foodSecurity)
+      #data <- foodSecurity %>% filter(foodSecurity != "No Response")
+      #data$foodSecurity <- droplevels(data$foodSecurity)
       
       # Grab the predictor variables to be used in the model from the user input
       vars <- unlist(input$multiModelVars)
       
       # Partition the data into a training set and test set
-      trainIndex <- createDataPartition(data$foodSecurity,
+      trainIndex <- createDataPartition(foodSecurityNR$foodSecurity,
                                         p = input$splitPercent/100, 
                                         list = FALSE, 
                                         times = 1)
-      trainData <- data[ trainIndex,]
-      testData  <- data[-trainIndex,]
+      trainData <- foodSecurityNR[ trainIndex,]
+      testData  <- foodSecurityNR[-trainIndex,]
       
-      # Fit a Multinomial Logistic Regression Model using cross validation
-      multinomFit <- train(foodSecurity ~ ., 
+      # Fit a Binomial Logistic Regression Model
+      glmFit <- train(foodSecurity ~ ., 
                            data = trainData[,c(c("foodSecurity"), vars)],
-                           method = 'multinom',
+                           method = 'glm',
+                           family = 'binomial',
                            trControl = trainControl(method = "cv", 
                                                     number = input$numFolds),
                            # Do not print output from the cross validation
@@ -657,7 +658,7 @@ shinyServer(function(input, output, session) {
                            na.action = na.exclude)
       
       # Print a summary of the Multinomial Logistic Regression Model
-      summary(multinomFit)
+      summary(glmFit)
     })
   })
   
