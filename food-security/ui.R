@@ -274,7 +274,7 @@ shinyUI(navbarPage(
           ),
           radioButtons("infoType", 
                        label = "", 
-                       choices = c("Multinomial Logistic Regression",
+                       choices = c("Binomial Logistic Regression",
                                    "Classification Tree",
                                    "Random Forest"), 
                        selected = character(0)
@@ -282,15 +282,16 @@ shinyUI(navbarPage(
         ),
         
         mainPanel(fluidPage(
-          conditionalPanel(condition = "input.infoType == 'Multinomial Logistic Regression'",
+          conditionalPanel(condition = "input.infoType == 'Binomial Logistic Regression'",
             withMathJax(),
-            h3(strong(tags$u("Logistic Regression"))
+            h3(strong(tags$u("Binomial Logistic Regression"))
             ),
             "Logistic Regression is a type of regression analysis, a ",
             "predictive modeling technique which is used to find the ",
             "relationship between a binary response and one or more ",
-            "predictors.  When the response has more than two categorical ",
-            "levels, the analysis is called Multinomial Logistic Regression.",
+            "predictors.  When the response is binary, the analysis is called ",
+            "Binomial Logistic Regression.  It's called Multinomial Logistic ",
+            "Regression when the response has more than two categories.",
             br(),
             h4("Nuts and Bolts of the Model:"),
             helpText("Consider a binary response variable \\(Y\\) with ",
@@ -357,63 +358,61 @@ shinyUI(navbarPage(
           conditionalPanel(condition = "input.infoType == 'Classification Tree'",
             h3(strong(tags$u("Classification Tree"))
             ),
-            fluidRow(
-              column(width = 5, offset = 1,
-                h4("Advantages"),
-                tags$ul(
-                  tags$li("Simple to understand and easy to visualize."),
-                  tags$li("Requires minimal data cleaning."),
-                  tags$li("Does not require normality assumptions."),
-                  tags$li("Can handle both numerical and catergorical data."),
-                  tags$li("Works well with dichotomous and non-dichotomous ",
-                          "response variables.")
-                )
-              ),
-              column(width = 4, offset = 1,
-                h4("Drawbacks"),
-                tags$ul(
-                  tags$li("Can be overly complex leading to overfitting."),
-                  tags$li("Heavily influenced by small variations in data."),
-                  tags$li("Not good for extrapolation."),
-                  tags$li("No optimal algorithm; computationaly intensive.")
-                )
-              )
+            "A decision tree is a non-parametric supervised learning method that predicts the value of a response variable by learning simple descion rules inferred from the data features.  There are two kinds of decision trees, classification and regression.  Classification trees are used to model categorical responses; regression trees model continuous responses.  Both types of trees can use categorical and/or continuous predictor variables to fit the model.  Since our target variable 'Food Security' is categorical, we could fit a classification tree to make predictions about the food security of a particular individual.",
+            br(),
+            h4("Nuts and Bolts of the Model:"),
+            "To build a classification tree, the data is partitioned using recursive binary splitting.  During each iteration, a parent node is split along a particular predictor, the splitting variable, at a given location, the split point.  Many different split locations are considered before one is chosen.  The split location chosen is the one that minimizes the Gini index or the deviance.  For a binary response , we have",
+            helpText("$$\\text{Gini Index:} \\ \\ 2p(1-p)$$"),
+            helpText("$$\\text{Deviance:} \\ \\ -2p\\log(p)-2(1-p)\\log(1-p)$$"),
+            "where ", em("p"), " is the probability of the response.  Note both of these values will be small if ", em("p"), " is near 0 or 1.  When the split location is finalized, two branches of the tree are formed, a left child node and a right child node.  The recursive binary splitting continues on each of these new branches until a child node contains a small subset of observations.  These 'terminal' nodes are often called leaf nodes.  Finally, the tree is pruned by removing sections of the tree that are non-critical and redundant.",
+            br(),
+            h4("Example:"),
+            "Here, we created a classification tree for the subset of individuals that received SNAP benefits.  The predictors used are 'Race' and 'Hispanic Origin'.",
+            img(src = "treePlot.jpg",
+                # Center the image
+                style="display: block; margin-left: auto; margin-right: auto;"
+            ),
+            h4("Advantages"),
+            tags$ul(
+              tags$li("Simple to understand and easy to visualize."),
+              tags$li("Requires minimal data cleaning."),
+              tags$li("Does not require normality assumptions."),
+              tags$li("Can handle both numerical and catergorical data."),
+              tags$li("Works well with dichotomous and non-dichotomous ",
+                      "response variables.")
+            ),
+            h4("Drawbacks"),
+            tags$ul(
+              tags$li("Can be overly complex leading to overfitting."),
+              tags$li("Heavily influenced by small variations in data."),
+              tags$li("Not good for extrapolation."),
+              tags$li("No optimal algorithm; computationaly intensive.")
             )
           ),
           conditionalPanel(condition = "input.infoType == 'Random Forest'",
-            h3(strong(tags$u("Random Forest")),
-               "Regularly provides more accurate predictions than a single descision tree"
+            h3(strong(tags$u("Random Forest"))
             ),
-            fluidRow(
-              column(width = 5, offset = 1,
-                h4("Advantages"),
-                tags$ul(
-                  tags$li("Easily handles a large data set with a multitude of",
-                          "variables."),
-                  tags$li("can automatically handle missing values."),
-                  tags$li("Reduced risk of overfitting."),
-                  tags$li("Robust to outliers."),
-                  tags$li("Easy to evaluate variable importance, or ",
-                          "contribution, to the model.")
-                )
-              ),
-              column(width = 4, offset = 1,
-                h4("Drawbacks"),
-                tags$ul(
-                  tags$li("Not easy to interpret."),
-                  tags$li("Time-consuming algorithm; parallel processing can ",
-                          "speed up computation times."),
-                  tags$li("Does not work well when data is sparse."),
-                  tags$li("Not good for extrapolation.")
-                )
-              )
+            "Regularly provides more accurate predictions than a single descision tree",
+            h4("Advantages"),
+            tags$ul(
+              tags$li("Easily handles a large data set with a multitude of",
+                      "variables."),
+              tags$li("can automatically handle missing values."),
+              tags$li("Reduced risk of overfitting."),
+              tags$li("Robust to outliers."),
+              tags$li("Easy to evaluate variable importance, or contribution, ",
+                      "to the model.")
+            ),
+            h4("Drawbacks"),
+            tags$ul(
+              tags$li("Not easy to interpret."),
+              tags$li("Time-consuming algorithm; parallel processing can ",
+                      "speed up computation times."),
+              tags$li("Does not work well when data is sparse."),
+              tags$li("Not good for extrapolation.")
             )
           )
         ))
-          # Explain the 3 modeling approaches
-          # Benefits of each
-          # Drawbacks of each
-          # Include equations using `mathJax`
       ),
       
       # Add the Model Fitting tab.
@@ -425,12 +424,12 @@ shinyUI(navbarPage(
           ),
           radioButtons("modelType", 
             label = "Choose one model type:", 
-            choices = c("Multinomial Logistic Regression",
+            choices = c("Binomial Logistic Regression",
                         "Classification Tree",
                         "Random Forest"), 
             selected = character(0)
           ),
-          conditionalPanel(condition = "input.modelType == 'Multinomial Logistic Regression'",
+          conditionalPanel(condition = "input.modelType == 'Binomial Logistic Regression'",
             h3("Step 2: Choose Predictors"
             ),
             checkboxGroupInput("multiModelVars", 
@@ -490,7 +489,7 @@ shinyUI(navbarPage(
         ),
         
         mainPanel(fluidPage(
-          conditionalPanel(condition = "input.modelType == 'Multinomial Logistic Regression'",
+          conditionalPanel(condition = "input.modelType == 'Binomial Logistic Regression'",
             verbatimTextOutput("summaryMulti")
           ),
           conditionalPanel(condition = "input.modelType == 'Classification Tree'",

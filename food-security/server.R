@@ -657,7 +657,10 @@ shinyServer(function(input, output, session) {
                            # Exclude any observations with missing data
                            na.action = na.exclude)
       
-      # Print a summary of the Multinomial Logistic Regression Model
+      # Save the fitted model in a folder.
+      saveRDS(glmFit, "./Fitted Models/logistic-regression-model.rds")
+      
+      # Print a summary of the Binomial Logistic Regression Model
       summary(glmFit)
     })
   })
@@ -698,6 +701,9 @@ shinyServer(function(input, output, session) {
                        tuneGrid = expand.grid(cp = seq(0, 0.1, by = 0.0001)),
                        # Exclude any observations with missing data
                        na.action = na.exclude)
+      
+      # Save the fitted model in a folder.
+      saveRDS(treeFit, "./Fitted Models/classification-tree-model.rds")
       
       # If the Classification Tree is only one node, produce a warning message.
       validate(
@@ -750,6 +756,10 @@ shinyServer(function(input, output, session) {
                          # Do not print output from the cross validation
                          # Exclude any observations with missing data
                          na.action = na.exclude)
+      
+      # Save the fitted model in a folder.
+      saveRDS(forestFit, "./Fitted Models/random-forest-model.rds")
+      
       temp <- varImp(forestFit)
       importance <- as_tibble(temp$importance, rownames = "variable")
       importance <- importance %>% arrange(desc(Overall))
