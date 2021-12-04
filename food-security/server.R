@@ -618,175 +618,313 @@ shinyServer(function(input, output, session) {
     })
   })
   
-  observeEvent(input$runMLM, {
-    output$summaryMulti <- renderPrint({
+  trainLogisticModel <- eventReactive(input$runMLM, {
     
-      # Create a Progress object
-      progress <- Progress$new()
-      # Ensure the Progress object closes upon exiting this reactive, even if
-      # there is an error.
-      on.exit(progress$close())
-      # Set the message to the user while cross-validation is running.
-      progress$set(message = "Calculation in progress",
-                   detail = "This may take a while...")
-      
-      # Remove "No Response" from `foodSecurity`
-      #data <- foodSecurity %>% filter(foodSecurity != "No Response")
-      #data$foodSecurity <- droplevels(data$foodSecurity)
-      
-      # Grab the predictor variables to be used in the model from the user input
-      vars <- unlist(input$multiModelVars)
-      
-      # Partition the data into a training set and test set
-      trainIndex <- createDataPartition(foodSecurityNR$foodSecurity,
-                                        p = input$splitPercent/100, 
-                                        list = FALSE, 
-                                        times = 1)
-      trainData <- foodSecurityNR[ trainIndex,]
-      testData  <- foodSecurityNR[-trainIndex,]
-      
-      # Fit a Binomial Logistic Regression Model
-      glmFit <- train(foodSecurity ~ ., 
-                           data = trainData[,c(c("foodSecurity"), vars)],
-                           method = 'glm',
-                           family = 'binomial',
-                           trControl = trainControl(method = "cv", 
-                                                    number = input$numFolds),
-                           # Do not print output from the cross validation
-                           trace = FALSE,
-                           # Exclude any observations with missing data
-                           na.action = na.exclude)
-      
-      # Save the fitted model in a folder.
-      saveRDS(glmFit, "./Fitted Models/logistic-regression-model.rds")
-      
-      # Print a summary of the Binomial Logistic Regression Model
-      summary(glmFit)
-    })
+    # Create a Progress object
+    progress <- Progress$new()
+    # Ensure the Progress object closes upon exiting this reactive, even if
+    # there is an error.
+    on.exit(progress$close())
+    # Set the message to the user while cross-validation is running.
+    progress$set(message = "Calculation in progress",
+                 detail = "This may take a while...")
+    
+    # Grab the predictor variables to be used in the model from the user input
+    vars <- unlist(input$multiModelVars)
+    
+    # Partition the data into a training set and test set
+    trainIndex <- createDataPartition(foodSecurityNR$foodSecurity,
+                                      p = input$splitPercent/100, 
+                                      list = FALSE, 
+                                      times = 1)
+    trainData.logistic <- foodSecurityNR[ trainIndex,]
+    testData.logistic  <- foodSecurityNR[-trainIndex,]
+    
+    # Fit a Binomial Logistic Regression Model
+    glmFit <- train(foodSecurity ~ ., 
+                    data = trainData.logistic[,c(c("foodSecurity"), vars)],
+                    method = 'glm',
+                    family = 'binomial',
+                    trControl = trainControl(method = "cv", 
+                                             number = input$numFolds),
+                    # Do not print output from the cross validation
+                    trace = FALSE,
+                    # Exclude any observations with missing data
+                    na.action = na.exclude)
+    
+    # Save the fitted model in a folder.
+    saveRDS(glmFit, "./Fitted Models/logistic-regression-model.rds")
+    
+    #  Print a summary of the Binomial Logistic Regression Model
+    logisticSummary <- summary(glmFit)
+    
+    logisticModelPredict <- predict(glmFit, newdata = testData.logistic)
+    logisticFitStats <- confusionMatrix(logisticModelPredict, 
+                                        testData.logistic$foodSecurity)
+    
+    # Return all objects as a list
+    list(summary = logisticSummary, fitStats = logisticFitStats)
   })
   
-  observeEvent(input$runClassTree, {
-    output$summaryClassTree <- renderPlot({
+  output$logisticTitle <- renderUI({
+    trainLogisticModel()
+    h5(strong("Model training is complete."))
+  })
+  
+  output$summaryMulti <- renderPrint({
+    trainLogisticModel()$summary
+  })
+  
+  output$logisticFitStats <- renderPrint({
+    trainLogisticModel()$fitStats
+  })
+  
+  trainTreeModel <- eventReactive(input$runClassTree, {
+    
+    # Create a Progress object
+    progress <- Progress$new()
+    # Ensure the Progress object closes upon exiting this reactive, even if
+    # there is an error.
+    on.exit(progress$close())
+    # Set the message to the user while cross-validation is running.
+    progress$set(message = "Calculation in progress",
+                 detail = "This may take a while...")
+    
+    # Grab the predictor variables to be used in the model from the user input
+    vars <- unlist(input$classTreeVars)
+    
+    # Partition the data into a training set and test set
+    trainIndex <- createDataPartition(foodSecurityNR$foodSecurity,
+                                      p = input$splitPercent/100, 
+                                      list = FALSE, 
+                                      times = 1)
+    trainData.tree <- foodSecurityNR[ trainIndex,]
+    testData.tree  <- foodSecurityNR[-trainIndex,]
       
-      # Create a Progress object
-      progress <- Progress$new()
-      # Ensure the Progress object closes upon exiting this reactive, even if
-      # there is an error.
-      on.exit(progress$close())
-      # Set the message to the user while cross-validation is running.
-      progress$set(message = "Calculation in progress",
-                   detail = "This may take a while...")
+    # Fit a Classification Tree Model using cross validation
+    treeFit <- train(foodSecurity ~ ., 
+                     data = trainData.tree[,c(c("foodSecurity"), vars)],
+                     method = 'rpart',
+                     trControl = trainControl(method = "cv", 
+                                              number = input$numFolds),
+                     tuneGrid = expand.grid(cp = seq(0, 0.1, by = 0.0001)),
+                     # Exclude any observations with missing data
+                     na.action = na.exclude)
+    
+    # Save the fitted model in a folder.
+    saveRDS(treeFit, "./Fitted Models/classification-tree-model.rds")
+    
+    # Output a plot of the Classification Tree
+    treeSummary <- rattle::fancyRpartPlot(treeFit$finalModel, tweak = 2)
+    
+    treeModelPredict <- predict(treeFit, newdata = testData.tree)
+    treeFitStats <- confusionMatrix(treeModelPredict, 
+                                    testData.tree$foodSecurity)
+    
+    # Return all objects as a list
+    list(summary = treeSummary, fitStats = treeFitStats)
+  })
+  
+  output$treeTitle <- renderUI({
+    trainTreeModel()
+    h5(strong("Model training is complete."))
+  })
+  
+  output$summaryTree <- renderPlot({
+    trainTreeModel()$summary
+  })
+  
+  output$treeFitStats <- renderPrint({
+    trainTreeModel()$fitStats
+  })
+  
+  trainForestModel <- eventReactive(input$runForest, {
+    
+    # Create a Progress object
+    progress <- Progress$new()
+    # Ensure the Progress object closes upon exiting this reactive, even if
+    # there is an error.
+    on.exit(progress$close())
+    # Set the message to the user while cross-validation is running.
+    progress$set(message = "Calculation in progress",
+                 detail = "This may take a while...")
+    
+    # Grab the predictor variables to be used in the model from the user input
+    vars <- unlist(input$forestVars)
+    
+    # Partition the data into a training set and test set
+    trainIndex <- createDataPartition(foodSecurityNR$foodSecurity,
+                                      p = input$splitPercent/100, 
+                                      list = FALSE, 
+                                      times = 1)
+    trainData.forest <- foodSecurityNR[ trainIndex,]
+    testData.forest  <- foodSecurityNR[-trainIndex,]
       
-      # Remove "No Response" from `foodSecurity`
-      data <- foodSecurity %>% filter(foodSecurity != "No Response")
-      data$foodSecurity <- droplevels(data$foodSecurity)
-      
-      # Grab the predictor variables to be used in the model from the user input
-      vars <- unlist(input$classTreeVars)
-      
-      # Partition the data into a training set and test set
-      trainIndex <- createDataPartition(data$foodSecurity,
-                                        p = input$splitPercent/100, 
-                                        list = FALSE, 
-                                        times = 1)
-      trainData <- data[ trainIndex,]
-      testData  <- data[-trainIndex,]
-      
-      # Fit a Classification Tree Model using cross validation
-      treeFit <- train(foodSecurity ~ ., 
-                       data = trainData[,c(c("foodSecurity"), vars)],
-                       method = 'rpart',
+    # Fit a Random Forest Model using cross validation
+    forestFit <- train(foodSecurity ~ ., 
+                       data = trainData.forest[,c(c("foodSecurity"), vars)],
+                       method = 'ranger',
+                       # Needed to retrieve variable importance 
+                       importance = "permutation",
                        trControl = trainControl(method = "cv", 
                                                 number = input$numFolds),
-                       tuneGrid = expand.grid(cp = seq(0, 0.1, by = 0.0001)),
+                       #tuneGrid = expand.grid(mtry = c(1:15)),
                        # Exclude any observations with missing data
                        na.action = na.exclude)
-      
-      # Save the fitted model in a folder.
-      saveRDS(treeFit, "./Fitted Models/classification-tree-model.rds")
-      
-      # If the Classification Tree is only one node, produce a warning message.
-      validate(
-        need(try(rattle::fancyRpartPlot(treeFit$finalModel, tweak = 2)),
-             paste0("Classification Tree is a single node. Please select ",
-                    "additional predictor variables for the model."))
+    
+    # Save the fitted model in a folder.
+    saveRDS(forestFit, "./Fitted Models/random-forest-model.rds")
+    
+    temp <- varImp(forestFit)
+    importance <- as_tibble(temp$importance, rownames = "variable")
+    importance <- importance %>% arrange(desc(Overall))
+    
+    # Output a plot of the variable importance from the Random Forest Model
+    # (Top 20 predictor variables only)
+    forestSummary <- ggplot(importance[1:20,],
+                            aes(x = reorder(variable, Overall), 
+                                y = Overall, fill = Overall)) +
+                       geom_col() +
+                       coord_flip() +
+                       theme(legend.position = "none") +
+                       labs(x = "Predictors",  
+                            y = "Importance %", 
+                            title ="Importance of Top 20 Predictors")
+    
+    forestModelPredict <- predict(forestFit, newdata = testData.forest)
+    forestFitStats <- confusionMatrix(forestModelPredict, 
+                                      testData.forest$foodSecurity)
+    
+    # Return all objects as a list
+    list(summary = forestSummary, fitStats = forestFitStats)
+  })
+  
+  output$forestTitle <- renderUI({
+    trainForestModel()
+    h5(strong("Model training is complete."))
+  })
+  
+  output$summaryForest <- renderPlot({
+    trainForestModel()$summary
+  })
+  
+  output$forestFitStats <- renderPrint({
+    trainForestModel()$fitStats
+  })
+  
+  output$logisticPredcitonVariables <- renderUI({
+    tags$ul(
+      tagList(
+        lapply(input$multiModelVars, function(variable) {
+          tags$li(h5(strong(variableNames[[variable]])))
+        })
       )
+    )
+  })
+  
+  output$treePredcitonVariables <- renderUI({
+    tags$ul(
+      tagList(
+        lapply(input$classTreeVars, function(variable) {
+          tags$li(h5(strong(variableNames[[variable]])))
+        })
+      )
+    )
+  })
+  
+  output$forestPredcitonVariables <- renderUI({
+    tags$ul(
+      tagList(
+        lapply(input$forestVars, function(variable) {
+          tags$li(h5(strong(variableNames[[variable]])))
+        })
+      )
+    )
+  })
+  
+  observeEvent(input$getLogisticPrediction, {
+    output$logisticPrediction <- renderUI({
       
-      # Output a plot of the Classification Tree
-      rattle::fancyRpartPlot(treeFit$finalModel, tweak = 2)
+      # Load in the logistic regression model.
+      model <- readRDS("./Fitted Models/logistic-regression-model.rds")
+      
+      predictorValues <- data.frame(sex = input$sexPred,
+                                    race = input$racePred,
+                                    hispanicOrigin = input$hispanicOriginPred,
+                                    age = input$agePred,
+                                    citizenship = input$citizenshipPred,
+                                    typeHH = input$typeHHPred,
+                                    numHHMembers = input$numHHMembersPred,
+                                    emplyStatus = input$employStatusPred,
+                                    annualHHIncome = input$annualHHIncomePred,
+                                    maritalStatus = input$maritalStatusPred,
+                                    livingQuarters = input$livingQuartersPred,
+                                    educationLevel = input$educationLevelPred,
+                                    receivedSNAP = input$receivedSNAPPred)
+      
+      thePrediction <- predict(model, predictorValues)
+      
+      # observe({print(thePrediction)})
+      # observe({print(class(thePrediction))})
+      
+      h3("This individual is likely to be food ", 
+         strong(toupper(thePrediction)), ".")
     })
   })
   
-  observeEvent(input$runForest, {
-    output$summaryForest <- renderPlot({
-     
-      # Create a Progress object
-      progress <- Progress$new()
-      # Ensure the Progress object closes upon exiting this reactive, even if
-      # there is an error.
-      on.exit(progress$close())
-      # Set the message to the user while cross-validation is running.
-      progress$set(message = "Calculation in progress",
-                   detail = "This may take a while...")
+  observeEvent(input$getTreePrediction, {
+    output$treePrediction <- renderUI({
       
-      # Remove "No Response" from `foodSecurity`
-      data <- foodSecurity %>% filter(foodSecurity != "No Response")
-      data$foodSecurity <- droplevels(data$foodSecurity)
+      # Load in the logistic regression model.
+      model <- readRDS("./Fitted Models/classification-tree-model.rds")
       
-      # Grab the predictor variables to be used in the model from the user input
-      vars <- unlist(input$forestVars)
+      predictorValues <- data.frame(sex = input$sexPred,
+                                    race = input$racePred,
+                                    hispanicOrigin = input$hispanicOriginPred,
+                                    age = input$agePred,
+                                    citizenship = input$citizenshipPred,
+                                    typeHH = input$typeHHPred,
+                                    numHHMembers = input$numHHMembersPred,
+                                    emplyStatus = input$employStatusPred,
+                                    annualHHIncome = input$annualHHIncomePred,
+                                    maritalStatus = input$maritalStatusPred,
+                                    livingQuarters = input$livingQuartersPred,
+                                    educationLevel = input$educationLevelPred,
+                                    receivedSNAP = input$receivedSNAPPred)
       
-      # Partition the data into a training set and test set
-      trainIndex <- createDataPartition(data$foodSecurity,
-                                        p = input$splitPercent/100, 
-                                        list = FALSE, 
-                                        times = 1)
-      trainData <- data[ trainIndex,]
-      testData  <- data[-trainIndex,]
+      thePrediction <- predict(model, predictorValues)
       
-      # Fit a Random Forest Model using cross validation
-      forestFit <- train(foodSecurity ~ ., 
-                         data = trainData[,c(c("foodSecurity"), vars)],
-                         method = 'ranger',
-                         # Needed to retrieve variable importance 
-                         importance = "permutation",
-                         trControl = trainControl(method = "cv", 
-                                                  number = input$numFolds),
-                         #tuneGrid = expand.grid(mtry = c(1:15)),
-                         # Do not print output from the cross validation
-                         # Exclude any observations with missing data
-                         na.action = na.exclude)
-      
-      # Save the fitted model in a folder.
-      saveRDS(forestFit, "./Fitted Models/random-forest-model.rds")
-      
-      temp <- varImp(forestFit)
-      importance <- as_tibble(temp$importance, rownames = "variable")
-      importance <- importance %>% arrange(desc(Overall))
-      
-      # Output a plot of the variable importance from the Random Forest Model
-      # (Top 20 predictor variables only)
-      ggplot(importance[1:20,],
-             aes(x = reorder(variable, Overall), 
-                 y = Overall, fill = Overall)) +
-        geom_col() +
-        coord_flip() +
-        theme(legend.position = "none") +
-        labs(x = "Predictors",  
-             y = "Importance %", 
-             title ="Importance of Top 20 Predictors")
+      h3("This individual is likely to be food ", 
+         strong(toupper(thePrediction)), ".")
     })
   })
   
-  # output$predictionVariables <- renderUI({
-  #   
-  #   # Get the variables to use for each model.
-  #   logisticModelVariables <- input$multiModelVars
-  #   
-  #   selectInput("inputId", label, choices = levels(foodSecurity$race), selected
-  # })
-  
-  
+  observeEvent(input$getForestPrediction, {
+    output$forestPrediction <- renderUI({
+      
+      # Load in the logistic regression model.
+      model <- readRDS("./Fitted Models/random-forest-model.rds")
+      
+      predictorValues <- data.frame(sex = input$sexPred,
+                                    race = input$racePred,
+                                    hispanicOrigin = input$hispanicOriginPred,
+                                    age = input$agePred,
+                                    citizenship = input$citizenshipPred,
+                                    typeHH = input$typeHHPred,
+                                    numHHMembers = input$numHHMembersPred,
+                                    emplyStatus = input$employStatusPred,
+                                    annualHHIncome = input$annualHHIncomePred,
+                                    maritalStatus = input$maritalStatusPred,
+                                    livingQuarters = input$livingQuartersPred,
+                                    educationLevel = input$educationLevelPred,
+                                    receivedSNAP = input$receivedSNAPPred)
+      
+      thePrediction <- predict(model, predictorValues)
+      
+      h3("This individual is likely to be food ", 
+         strong(toupper(thePrediction)), ".")
+    })
+  })
   
   observeEvent(input$viewButton, {
     output$saveButtonTitle <- renderUI({

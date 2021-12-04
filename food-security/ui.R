@@ -358,16 +358,41 @@ shinyUI(navbarPage(
           conditionalPanel(condition = "input.infoType == 'Classification Tree'",
             h3(strong(tags$u("Classification Tree"))
             ),
-            "A decision tree is a non-parametric supervised learning method that predicts the value of a response variable by learning simple descion rules inferred from the data features.  There are two kinds of decision trees, classification and regression.  Classification trees are used to model categorical responses; regression trees model continuous responses.  Both types of trees can use categorical and/or continuous predictor variables to fit the model.  Since our target variable 'Food Security' is categorical, we could fit a classification tree to make predictions about the food security of a particular individual.",
+            "A decision tree is a non-parametric supervised learning method ",
+            "that predicts the value of a response variable by learning ",
+            "simple descion rules inferred from the data features.  There are ",
+            "two kinds of decision trees, classification and regression.  ",
+            "Classification trees are used to model categorical responses; ",
+            "regression trees model continuous responses.  Both types of ",
+            "trees can use categorical and/or continuous predictor variables ",
+            "to fit the model.  Since our target variable 'Food Security' is ",
+            "categorical, we could fit a classification tree to make ",
+            "predictions about the food security of a particular individual.",
             br(),
             h4("Nuts and Bolts of the Model:"),
-            "To build a classification tree, the data is partitioned using recursive binary splitting.  During each iteration, a parent node is split along a particular predictor, the splitting variable, at a given location, the split point.  Many different split locations are considered before one is chosen.  The split location chosen is the one that minimizes the Gini index or the deviance.  For a binary response , we have",
+            "To build a classification tree, the data is partitioned using ",
+            "recursive binary splitting.  During each iteration, a parent ",
+            "node is split along a particular predictor, the splitting ",
+            "variable, at a given location, the split point.  Many different ",
+            "split locations are considered before one is chosen.  The split ",
+            "location chosen is the one that minimizes the Gini index or the ",
+            "deviance.  For a binary response , we have",
             helpText("$$\\text{Gini Index:} \\ \\ 2p(1-p)$$"),
-            helpText("$$\\text{Deviance:} \\ \\ -2p\\log(p)-2(1-p)\\log(1-p)$$"),
-            "where ", em("p"), " is the probability of the response.  Note both of these values will be small if ", em("p"), " is near 0 or 1.  When the split location is finalized, two branches of the tree are formed, a left child node and a right child node.  The recursive binary splitting continues on each of these new branches until a child node contains a small subset of observations.  These 'terminal' nodes are often called leaf nodes.  Finally, the tree is pruned by removing sections of the tree that are non-critical and redundant.",
+            helpText("$$\\text{Deviance:} \\ \\ -2p\\log(p)-2(1-p)",
+            "\\log(1-p)$$"), " where ", em("p"), " is the probability of the ",
+            "response.  Note both of these values will be small if ", em("p"),
+            " is near 0 or 1.  When the split location is finalized, two ",
+            "branches of the tree are formed, a left child node and a right ",
+            "child node.  The recursive binary splitting continues on each of ",
+            "these new branches until a child node contains a small subset of ",
+            "observations.  These 'terminal' nodes are often called leaf ",
+            "nodes.  Finally, the tree is pruned by removing sections of the ",
+            "tree that are non-critical and redundant.",
             br(),
             h4("Example:"),
-            "Here, we created a classification tree for the subset of individuals that received SNAP benefits.  The predictors used are 'Race' and 'Hispanic Origin'.",
+            "Here, we created a classification tree for the subset of ",
+            "individuals that received SNAP benefits.  The predictors used ",
+            "are 'Race' and 'Hispanic Origin'.",
             img(src = "treePlot.jpg",
                 # Center the image
                 style="display: block; margin-left: auto; margin-right: auto;"
@@ -397,8 +422,39 @@ shinyUI(navbarPage(
           conditionalPanel(condition = "input.infoType == 'Random Forest'",
             h3(strong(tags$u("Random Forest"))
             ),
-            "Regularly provides more accurate predictions than a single descision tree",
-            h4("Advantages"),
+            "A random forest utilizes an ensemble of decision trees to create ",
+            "a prediction model.  The algorithm establishes the predeicted ",
+            "response based on the average output of the decision trees.  ",
+            "Increasing the number of decision trees in the forest can ",
+            "increase predictive power.",
+            br(),
+            h4("Inside the Algorithm:"),
+            "Random forests make great predictive models, not only because ",
+            "they are an amalgam of many different decision trees, but ",
+            "because random forests also add an additional random component ",
+            "while training the model.  Instead of searching for the most ",
+            "important predictor overall to split a decision tree node, the ",
+            "algorithm searches for the best predictor among a random subset ",
+            "of predictors. This results in a wide diversity of decision ",
+            "trees, contributing to a hihgly accurate prediction model.",
+            br(),
+            h4("Variable Importance:"),
+            "Another great quality of the random forest algorithm is that it ",
+            "is very easy to measure the relative importance of each ",
+            "predictor (and factors of predictors).  Consider a random forest ",
+            "model for 'Food Security' with predictor variables 'Race', ",
+            "'Hispanic Origin', 'US Citizenship', 'Number of Household ",
+            "Members', and 'Annual Household Income'.  The graph below ",
+            "outlines the imporatnce level of the top 20 preditive factors.  ",
+            "We see that several factors of 'Annual Household Income' and ",
+            "'Number of Household Members' play a very important role in ",
+            "predciting 'Food Security' in this particular model.",
+            br(),
+            img(src = "variable-importance.png",
+                # Center the image
+                style="display: block; margin-left: auto; margin-right: auto;"
+            ),
+            h4("Advantages:"),
             tags$ul(
               tags$li("Easily handles a large data set with a multitude of",
                       "variables."),
@@ -408,7 +464,7 @@ shinyUI(navbarPage(
               tags$li("Easy to evaluate variable importance, or contribution, ",
                       "to the model.")
             ),
-            h4("Drawbacks"),
+            h4("Drawbacks:"),
             tags$ul(
               tags$li("Not easy to interpret."),
               tags$li("Time-consuming algorithm; parallel processing can ",
@@ -495,13 +551,28 @@ shinyUI(navbarPage(
         
         mainPanel(fluidPage(
           conditionalPanel(condition = "input.modelType == 'Binomial Logistic Regression'",
-            verbatimTextOutput("summaryMulti")
+            htmlOutput("logisticTitle"),
+            h4("Model Fit Summary:"),
+            verbatimTextOutput("summaryMulti"),
+            br(),
+            h4("Model Fit Statistics (on test data):"),
+            verbatimTextOutput("logisticFitStats")
           ),
           conditionalPanel(condition = "input.modelType == 'Classification Tree'",
-            plotOutput("summaryClassTree")
+            htmlOutput("treeTitle"),
+            h4("Model Fit Summary:"),
+            plotOutput("summaryTree"),
+            br(),
+            h4("Model Fit Statistics (on test data):"),
+            verbatimTextOutput("treeFitStats")
           ),
           conditionalPanel(condition = "input.modelType == 'Random Forest'",
-            plotOutput("summaryForest")
+            htmlOutput("forestTitle"),
+            h4("Model Fit Summary:"),
+            plotOutput("summaryForest"),
+            br(),
+            h4("Model Fit Statistics (on test data):"),
+            verbatimTextOutput("forestFitStats")
           )
           
           # Split data into a training and test set, giving the user the 
@@ -658,10 +729,39 @@ shinyUI(navbarPage(
         ),
         
         mainPanel(fluidPage(
-          # Give the user a way to use one of the models for 
-          # prediction. That is they should be able to select the 
-          # values of the predictors and obtain a prediction for the 
-          # response.
+          conditionalPanel(condition = "input.predictionModel == 'Binomial Logistic Regression'",
+            h4(strong("The Binomial Logistic Regression Model uses the ",
+                      "following varables to predict food security status as ",
+                      "either SECURE or INSECURE:")),
+            htmlOutput("logisticPredcitonVariables"),
+            br(),
+            h4(strong("Enter your values of these predictors on the left, ",
+                      "then click the button below to get your prediction.")),
+            actionButton("getLogisticPrediction", label = "Get Prediction"),
+            htmlOutput("logisticPrediction")
+          ),
+          conditionalPanel(condition = "input.predictionModel == 'Classification Tree'",
+            h4(strong("The Classification Tree Model uses the following ",
+                      "varables to predict food security status as either ",
+                      "SECURE or INSECURE:")),
+            htmlOutput("treePredcitonVariables"),
+            br(),
+            h4(strong("Enter your values of these predictors on the left, ",
+                      "then click the button below to get your prediction.")),
+            actionButton("getTreePrediction", label = "Get Prediction"),
+            htmlOutput("treePrediction")
+          ),
+          conditionalPanel(condition = "input.predictionModel == 'Random Forest'",
+            h4(strong("The Random FOrest Model uses the following varables to ",
+                      "predict food security status as either SECURE or ",
+                      "INSECURE:")),
+            htmlOutput("forestPredcitonVariables"),
+            br(),
+            h4(strong("Enter your values of these predictors on the left, ",
+                      "then click the button below to get your prediction.")),
+            actionButton("getForestPrediction", label = "Get Prediction"),
+            htmlOutput("forestPrediction")
+          )
         ))
       )
     ),
