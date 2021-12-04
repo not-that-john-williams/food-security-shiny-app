@@ -1,53 +1,43 @@
+###############################################################################
+#
+# This R script downloads select portions of the December 2020 Food Security
+# Supplement from the census.gov API; cleans the data into a tidy format; and
+# creates two data frames that are used by the 2020 Food Security App.
+#
+# Author:  John Williams
+# Email:  jwili32@ncsu.edu
+#
+###############################################################################
+
+# Required packages
 library(tidyverse)
 library(censusapi)
+
+###############################################################################
+#
+# Download data from the API using a system key.
+#
+###############################################################################
 
 # Add key to .Renviron
 Sys.setenv(CENSUS_KEY="7ba991f2b52a05808dd84b9e20d650cc35f11a9a")
 # Reload .Renviron
 readRenviron("~/.Renviron")
 # Check to see that the expected key is output in your R console
-Sys.getenv("CENSUS_KEY")
+#Sys.getenv("CENSUS_KEY")
 
-cps_foodsec <- getCensus(
+rawData <- getCensus(
   name = "2020/cps/foodsec/dec",
   vars = c("HRFS12MD", "PESEX", "PTDTRACE", "PEHSPNON", "PRTAGE", "PRCITSHP",
            "HRHTYPE", "HRNUMHOU", "PEMLR", "HEFAMINC", "PRMARSTA", "HEHOUSUT",
-           "PEEDUCA", "HESP1"#, "HESP8", "HESP6", "HETS8OU"
-           ))
-cps_foodsec
+           "PEEDUCA", "HESP1")
+  )
 
-
-# "name": "HESP8",
-# "label": "Program - foods received from WIC Program, past 30 days",
-#     "-2": "Don't Know",
-#     "-1": "Not in Universe",
-#     "2": "No",
-#     "-3": "Refused",
-#     "1": "Yes",
-#     "-9": "No Response"
-
-
-# "name": "HESP6",
-# "label": "Program - free or reduced-cost lunches at school, past 30 days",
-#     "1": "Yes",
-#     "2": "No",
-#     "-2": "Don't Know",
-#     "-3": "Refused",
-#     "-1": "Not in Universe",
-#     "-9": "No Response"
-
-# "name": "HETS8OU",
-# "label": "Expend ï¿½ USUAL amount spent for food per week",
-#     "-2": "Don't Know",
-#     "-1": "Not in Universe",
-#     "-9": "No Response",
-#     "-3": "Refused"
-#   },
-#   "range": [
-#     {
-#       "min": "0",
-      # "max": "500",
-      # "description": "Dollars"
+###############################################################################
+#
+# Clean data into a tidy format.
+#
+###############################################################################
 
 sex_levels <- c("1", "2")
 sex_labels <- c("Male", "Female")
@@ -149,7 +139,7 @@ foodSecurity_levels <- c(1, 2, 3, 4, -10, -9, -1)
 foodSecurity_labels <- c("High", "Marginal", "Low", "Very Low", 
                          "No Response", "No Response", "No Response")
 
-foodSecurity <- cps_foodsec %>% 
+foodSecurity <- rawData %>% 
                 rename(foodSecurity = HRFS12MD,
                        sex = PESEX,
                        race = PTDTRACE,
@@ -199,8 +189,9 @@ foodSecurity <- cps_foodsec %>%
                                           breaks = c(0.5, 1.5, 2.5, 3.5, 4.5,
                                                      5.5, 6.5, 7.5, 8.5, 9.5,
                                                      19.5),
-                                          labels=c('1', '2', '3', '4', '5', '6',
-                                                   '7', '8', '9', '10 or More')),
+                                          labels=c('1', '2', '3', '4', '5',
+                                                   '6', '7', '8', '9',
+                                                   '10 or More')),
                        employStatus = factor(employStatus,
                                              levels = employStatus_levels,
                                              labels = employStatus_labels),
@@ -222,10 +213,11 @@ foodSecurity <- cps_foodsec %>%
 
 # Reduce the number of factors of `race` by combining all 3 or more race 
 # combinations together.
-levels(foodSecurity$race) <- c("White", "Black", "American Indian, Alaskan Native",
-                               "Asian", "Hawaiian/Pacific Islander", "White-Black",
-                               "White-AI", "White-Asian", "White-HP", "Black-AI", 
-                               "Other Two-Race Combination", 
+levels(foodSecurity$race) <- c("White", "Black",
+                               "American Indian, Alaskan Native", "Asian",
+                               "Hawaiian/Pacific Islander", "White-Black",
+                               "White-AI", "White-Asian", "White-HP",
+                               "Black-AI", "Other Two-Race Combination", 
                                "Other Two-Race Combination", 
                                "Other Two-Race Combination", 
                                "Other Two-Race Combination",
@@ -271,45 +263,45 @@ levels(foodSecurity$livingQuarters) <- c("NA", "House, Apartment, Flat",
 # Reduce the number of factors of `educationLevel` by combining all factors less
 # than 7th grade.
 levels(foodSecurity$educationLevel) <- c("Less Than 7th Grade", 
-                                           "Less Than 7th Grade",
-                                           "Less Than 7th Grade", 
-                                           "7th Or 8th Grade", "9th Grade",
-                                           "10th Grade", "11th Grade", 
-                                           "12th Grade No Diploma",
-                                           "High School Grad-Diploma or GED",
-                                           "Some College-No Degree",
-                                           "Associate Degree-Occupational/Vocational",
-                                           "Associate Degree-Academic Program",
-                                           "Bachelor's Degree", "Master's Degree",
-                                           "Professional School Degree",
-                                           "Doctorate Degree", "Not in Universe")
+                                         "Less Than 7th Grade",
+                                         "Less Than 7th Grade", 
+                                         "7th Or 8th Grade", "9th Grade",
+                                         "10th Grade", "11th Grade", 
+                                         "12th Grade No Diploma",
+                                         "High School Grad-Diploma or GED",
+                                         "Some College-No Degree",
+                                         "Associate Degree-Occupational/Vocational",
+                                         "Associate Degree-Academic Program",
+                                         "Bachelor's Degree", "Master's Degree",
+                                         "Professional School Degree",
+                                         "Doctorate Degree", "Not in Universe")
 
 # Drop unused factors of variables
 foodSecurity$typeHH <- droplevels(foodSecurity$typeHH)
 foodSecurity$annualHHIncome <- droplevels(foodSecurity$annualHHIncome)
-#foodSecurity$citizenship <- droplevels(foodSecurity$citizenship)
-#foodSecurity$livingQuarters <- droplevels(foodSecurity$livingQuarters)
 
-#predictors <- names(foodSecurity)[-1]
-predictors <- c("Sex", "Race", "Hispanic Origin", "Age", "US Citizenship",
-                "Type of Household", "# of Household Members",
-                "Employment Status", "Annual Household Income", "Marital Status",
-                "Living Quarters", "Highest Education Level Attained",
-                "Did Household Receive SNAP Benefits?")
-response <- "Food Security Level"
+# predictors <- c("Sex", "Race", "Hispanic Origin", "Age", "US Citizenship",
+#                 "Type of Household", "# of Household Members",
+#                 "Employment Status", "Annual Household Income",
+#                 "Marital Status", "Living Quarters",
+#                 "Highest Education Level Attained",
+#                 "Did Household Receive SNAP Benefits?")
+# response <- "Food Security Level"
 
 foodSecurityNR <- foodSecurity %>% 
-                  filter(foodSecurity != "No Response") #%>%
-                  #filter(race == c("White", "Black", "American Indian, Alaskan Native", "Asian", "Hawaiian/Pacific Islander"))
+                  filter(foodSecurity != "No Response")
+
 foodSecurityNR$foodSecurity <- droplevels(foodSecurityNR$foodSecurity)
 levels(foodSecurityNR$foodSecurity) <- c("Secure", "Secure", "Insecure", 
                                          "Insecure")
-#levels(foodSecurityNR$race) <- c("White", "Black", "American Indian, Alaskan Native",
-#                               "Asian", "Hawaiian/Pacific Islander",
-#                               "Two-Race Combination", "Two-Race Combination",
-#                               "Two-Race Combination", "Two-Race Combination",
-#                               "Two-Race Combination", "Two-Race Combination", 
-#                               "Two-Race Combination",
-#                               "Three or More Race Combinations")
-#foodSecurityNR$race <- droplevels(foodSecurityNR$race)
+
+###############################################################################
+#
+# Save two data frames to the "food-security/data" folder.  These data frames
+# are used by the 2020 Food Security App.
+#
+###############################################################################
+
+saveRDS(foodSecurity, "./food-security/data/foodSecurity.rds")
+saveRDS(foodSecurityNR, "./food-security/data/foodSecurityNR.rds")
 
