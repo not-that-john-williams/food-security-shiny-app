@@ -1,3 +1,12 @@
+###############################################################################
+#
+# This R script is the server for the 2020 Food Security Shiny App.
+#
+# Author:  John Williams
+# Email:  jwili32@ncsu.edu
+#
+###############################################################################
+
 # Required packages
 library(caret)
 library(DT)
@@ -14,6 +23,12 @@ library(shinyWidgets)
 library(sjPlot)
 library(summarytools)
 library(tidyverse)
+
+###############################################################################
+#
+# Download data objects into global environment.
+#
+###############################################################################
 
 foodSecurity <- readRDS("./data/foodSecurity.rds")
 foodSecurityNR <- readRDS("./data/foodSecurityNR.rds")
@@ -32,6 +47,12 @@ variableNames <- list("foodSecurity" = "Food Security",
                       "livingQuarters" = "Living Quarters",
                       "educationLevel" = "Education Level",
                       "receivedSNAP" = "Household Received SNAP Benefits")
+
+###############################################################################
+#
+# Define global functions.
+#
+###############################################################################
 
 # Function to create horizontal bar plots
 createBarPlot <- function(group, name, data, leg.pos = "none"){
@@ -63,7 +84,19 @@ createOtherPlot <- function(group, data){
   print(otherPlot)
 }
 
+###############################################################################
+#
+# Start of Shiny App Server
+#
+###############################################################################
+
 shinyServer(function(input, output, session) {
+  
+###############################################################################
+#
+# Outputs for "Data Exploration" tab.
+#
+###############################################################################
   
   # Create a title for the frequency table
   output$freqTableTitle <- renderUI({
@@ -624,6 +657,12 @@ shinyServer(function(input, output, session) {
     })
   })
   
+###############################################################################
+#
+# Outputs for "Model Fitting" section.
+#
+###############################################################################
+  
   trainLogisticModel <- eventReactive(input$runMLM, {
     
     # Create a Progress object
@@ -818,6 +857,12 @@ shinyServer(function(input, output, session) {
     trainForestModel()$fitStats
   })
   
+###############################################################################
+#
+# Outputs for "Prediction" section.
+#
+###############################################################################
+  
   output$logisticPredcitonVariables <- renderUI({
     tags$ul(
       tagList(
@@ -932,6 +977,12 @@ shinyServer(function(input, output, session) {
     })
   })
   
+###############################################################################
+#
+# Outputs for "Data" tab.
+#
+###############################################################################
+  
   observeEvent(input$viewButton, {
     output$saveButtonTitle <- renderUI({
       h5(strong("After filtering, click the button below to save the data set ",
@@ -939,13 +990,12 @@ shinyServer(function(input, output, session) {
     })
   })
   
-  # Adapted from the 'server.R' file located at
-  # https://github.com/RiveraDaniel/Regression/
-  
   selectedColumns <- eventReactive(input$viewButton, {
     input$variablesPicked
   })
   
+  # Adapted from the 'server.R' file located at
+  # https://github.com/RiveraDaniel/Regression/
   observeEvent(input$viewButton, {
     colNames <- unlist(variableNames[selectedColumns()])
     names(colNames) <- NULL
@@ -975,3 +1025,4 @@ shinyServer(function(input, output, session) {
   })
 
 })
+
