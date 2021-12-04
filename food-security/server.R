@@ -1,16 +1,22 @@
+# Required packages
+library(caret)
+library(DT)
+library(ggplot2)
+library(gmodels)
+library(graphics)
+library(nnet)
+library(ranger)
+library(rattle)
+library(rpart)
 library(shiny)
 library(shinythemes)
-library(ggplot2)
-library(summarytools)
-library(DT)
-library(gmodels)
-library(caret)
-library(nnet)
-library(rpart)
-library(rattle)
-library(ranger)
-library(graphics)
+library(shinyWidgets)
 library(sjPlot)
+library(summarytools)
+library(tidyverse)
+
+foodSecurity <- readRDS("./data/foodSecurity.rds")
+foodSecurityNR <- readRDS("./data/foodSecurityNR.rds")
 
 variableNames <- list("foodSecurity" = "Food Security",
                       "sex" = "Sex",

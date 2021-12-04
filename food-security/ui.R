@@ -1,14 +1,37 @@
+###############################################################################
+#
+# This R script is the UI for the 2020 Food Security Shiny App.
+#
+# Author:  John Williams
+# Email:  jwili32@ncsu.edu
+#
+###############################################################################
+
+# Required packages
+library(caret)
+library(DT)
+library(ggplot2)
+library(gmodels)
+library(graphics)
+library(nnet)
+library(ranger)
+library(rattle)
+library(rpart)
 library(shiny)
 library(shinythemes)
 library(shinyWidgets)
-library(ggplot2)
+library(sjPlot)
 library(summarytools)
-library(DT)
-library(caret)
-library(rpart)
-library(rattle)
+library(tidyverse)
 
-#source('../finalProject.R')
+###############################################################################
+#
+# Download data objects into global environment.
+#
+###############################################################################
+
+foodSecurity <- readRDS("./data/foodSecurity.rds")
+foodSecurityNR <- readRDS("./data/foodSecurityNR.rds")
 
 dataLink = paste0("https://www.census.gov/data/datasets/",
                   "2020/demo/cps/cps-food-security.html")
@@ -61,6 +84,12 @@ variableNames <- list("foodSecurity" = "Food Security",
                       "educationLevel" = "Education Level",
                       "receivedSNAP" = "Household Received SNAP Benefits")
 
+###############################################################################
+#
+# Initiate Shiny App UI
+#
+###############################################################################
+
 shinyUI(navbarPage(
     
   # Add a theme.
@@ -72,7 +101,12 @@ shinyUI(navbarPage(
   # Create tabs.
   tabsetPanel(
     
-    # About section.
+###############################################################################
+#
+# About Tab
+#
+###############################################################################
+
     tabPanel(
     
       # Add a title.
@@ -136,7 +170,12 @@ shinyUI(navbarPage(
       )
     ),
       
-    # Data Exploration section.
+###############################################################################
+#
+# Data Exploration Tab
+#
+###############################################################################
+
     tabPanel(
       
       # Add a title.
@@ -259,13 +298,22 @@ shinyUI(navbarPage(
       )
     ),
     
-    # Modeling Section
+###############################################################################
+#
+# Modeling Tab
+#
+###############################################################################
+
     navbarMenu(
       
-      # Add a title.
       title = "Modeling",
       
-      # Add the Modeling Info tab.
+###############################################################################
+#
+# Modeling Info Section
+#
+###############################################################################
+
       tabPanel(
         title = "Modeling Info",
         
@@ -476,7 +524,12 @@ shinyUI(navbarPage(
         ))
       ),
       
-      # Add the Model Fitting tab.
+###############################################################################
+#
+# Model Fitting Section
+#
+###############################################################################
+
       tabPanel(
         title = "Model Fitting",
         
@@ -574,24 +627,17 @@ shinyUI(navbarPage(
             h4("Model Fit Statistics (on test data):"),
             verbatimTextOutput("forestFitStats")
           )
-          
-          # Split data into a training and test set, giving the user the 
-          # ability to choose the proportion of data used in each.
-          # User should have functionality for choosing model settings
-          # for each model. For all models, the user should select the
-          # variables used in the model. Cross validation should be 
-          # used for selecting models where appropriate.
-          # When the user is ready, they should be able to press a 
-          # button and fit all three models on the training data.
-          # Fit statistics (RMSE) should be reported for each model
-          # along with the appropriate summaries about the model (for
-          # instance summary() run on the glm() fit, a plot showing
-          # the variable importance from the random forest model,...)
-          # The models should be compared on the test set and 
-          # appropriate statistics reported.
         ))
       ),
+
+###############################################################################
+#
+# Prediction Section
+#
+###############################################################################
+
       tabPanel(
+        
         title = "Prediction",
         
         sidebarPanel(
@@ -766,6 +812,12 @@ shinyUI(navbarPage(
       )
     ),
     
+###############################################################################
+#
+# Data Tab
+#
+###############################################################################
+
     tabPanel(
       
       # Add a title.
@@ -782,29 +834,12 @@ shinyUI(navbarPage(
                            `count-selected-text` = "{0}/{1} variables selected"),
             multiple = TRUE  # Selection of multiple items is allowed
           ),
-          #checkboxGroupInput("columns", 
-                             #label = "", 
-                             #choices = c(factorVariables),
-                             # Default with all variables selected
-                             #selected = c(factorVariables),
-                             # Render horizontally
-                             #inline = TRUE),
           actionButton("viewButton", "View"),
           br(),
         ),
         htmlOutput("saveButtonTitle"),
         DT::dataTableOutput("rawData", width = '1800px')
       )
-      
-      #sidebarPanel(),
-      
-      #mainPanel(
-        #DT::dataTableOutput("rawData", width = '1800px')
-          # User should be able to...
-          # Scroll through the data set
-          # Subset this data set (rows and columns)
-          # Save the possibly subsetted data as a file (.csv is fine)
-      #)
     )
   )
 ))
