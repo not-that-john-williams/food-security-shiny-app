@@ -372,7 +372,12 @@ shinyUI(navbarPage(
                 # Center the image
                 style="display: block; margin-left: auto; margin-right: auto;"
             ),
-            h4("Advantages"),
+            "After following the decision tree down its branches, we see that ",
+            "a non-Hispanic individual that identifies as American Indian and ",
+            "Alaskan Native, or as the two race combination White/American ",
+            "Indian and Alaskan Native, or as Three or More Race Combinations ",
+            "is predicted as being food insecure.",
+            h4("Advantages:"),
             tags$ul(
               tags$li("Simple to understand and easy to visualize."),
               tags$li("Requires minimal data cleaning."),
@@ -381,7 +386,7 @@ shinyUI(navbarPage(
               tags$li("Works well with dichotomous and non-dichotomous ",
                       "response variables.")
             ),
-            h4("Drawbacks"),
+            h4("Drawbacks:"),
             tags$ul(
               tags$li("Can be overly complex leading to overfitting."),
               tags$li("Heavily influenced by small variations in data."),
@@ -517,6 +522,141 @@ shinyUI(navbarPage(
       ),
       tabPanel(
         title = "Prediction",
+        
+        sidebarPanel(
+          radioButtons("predictionModel", 
+                       label = "Choose one model type:", 
+                       choices = c("Binomial Logistic Regression",
+                                   "Classification Tree",
+                                   "Random Forest"), 
+                       selected = character(0)
+          ),
+          conditionalPanel(
+            condition = (
+              "input.predictionModel == 'Binomial Logistic Regression' || 
+              input.predictionModel == 'Classification Tree' || 
+              input.predictionModel == 'Random Forest'"
+            ),
+            selectizeInput("sexPred", 
+              label = "Sex",
+              choices = levels(foodSecurityNR$sex),
+              multiple = FALSE,
+              options = list(
+                placeholder = "",
+                onInitialize = I('function() { this.setValue(""); }')
+              )
+            ),
+            selectizeInput("racePred", 
+              label = "Race",
+              choices = levels(foodSecurityNR$race),
+              multiple = FALSE,
+              options = list(
+                placeholder = "",
+                onInitialize = I('function() { this.setValue(""); }')
+              )
+            ),
+            selectizeInput("hispanicOriginPred", 
+              label = "Hispanic Origin",
+              choices = levels(foodSecurityNR$hispanicOrigin),
+              multiple = FALSE,
+              options = list(
+                placeholder = "",
+                onInitialize = I('function() { this.setValue(""); }')
+              )
+            ),
+            selectizeInput("agePred", 
+              label = "Age",
+              choices = levels(foodSecurityNR$age),
+              multiple = FALSE,
+              options = list(
+                placeholder = "",
+                onInitialize = I('function() { this.setValue(""); }')
+              )
+            ),
+            selectizeInput("citizenshipPred", 
+              label = "US Citizenship",
+              choices = levels(foodSecurityNR$citizenship),
+              multiple = FALSE,
+              options = list(
+                placeholder = "",
+                onInitialize = I('function() { this.setValue(""); }')
+              )
+            ),
+            selectizeInput("typeHHPred", 
+              label = "Type of Household",
+              choices = levels(foodSecurityNR$typeHH),
+              multiple = FALSE,
+              options = list(
+                placeholder = "",
+                onInitialize = I('function() { this.setValue(""); }')
+              )
+            ),
+            selectizeInput("numHHMembersPred", 
+              label = "Number of Household Members",
+              choices = levels(foodSecurityNR$numHHMembers),
+              multiple = FALSE,
+              options = list(
+                placeholder = "",
+                onInitialize = I('function() { this.setValue(""); }')
+              )
+            ),
+            selectizeInput("employStatusPred", 
+              label = "Employment Status",
+              choices = levels(foodSecurityNR$employStatus),
+              multiple = FALSE,
+              options = list(
+                placeholder = "",
+                onInitialize = I('function() { this.setValue(""); }')
+              )
+            ),
+            selectizeInput("annualHHIncomePred", 
+              label = "Annual Household Income",
+              choices = levels(foodSecurityNR$annualHHIncome),
+              multiple = FALSE,
+              options = list(
+                placeholder = "",
+                onInitialize = I('function() { this.setValue(""); }')
+              )
+            ),
+            selectizeInput("maritalStatusPred", 
+              label = "Marital Status",
+              choices = levels(foodSecurityNR$maritalStatus),
+              multiple = FALSE,
+              options = list(
+                placeholder = "",
+                onInitialize = I('function() { this.setValue(""); }')
+              )
+            ),
+            selectizeInput("livingQuartersPred", 
+              label = "Living Quarters",
+              choices = levels(foodSecurityNR$livingQuarters),
+              multiple = FALSE,
+              options = list(
+                placeholder = "",
+                onInitialize = I('function() { this.setValue(""); }')
+              )
+            ),
+            selectizeInput("educationLevelPred", 
+              label = "Education Level",
+              choices = levels(foodSecurityNR$educationLevel),
+              multiple = FALSE,
+              options = list(
+                placeholder = "",
+                onInitialize = I('function() { this.setValue(""); }')
+              )
+            ),
+            selectizeInput("receivedSNAPPred", 
+              label = "Household Received SNAP Benefits",
+              choices = levels(foodSecurityNR$receivedSNAP),
+              multiple = FALSE,
+              options = list(
+                placeholder = "",
+                onInitialize = I('function() { this.setValue(""); }')
+              )
+            )
+          )
+        ),
+        
         mainPanel(fluidPage(
           # Give the user a way to use one of the models for 
           # prediction. That is they should be able to select the 

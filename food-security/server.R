@@ -778,6 +778,16 @@ shinyServer(function(input, output, session) {
     })
   })
   
+  # output$predictionVariables <- renderUI({
+  #   
+  #   # Get the variables to use for each model.
+  #   logisticModelVariables <- input$multiModelVars
+  #   
+  #   selectInput("inputId", label, choices = levels(foodSecurity$race), selected
+  # })
+  
+  
+  
   observeEvent(input$viewButton, {
     output$saveButtonTitle <- renderUI({
       h5(strong("After filtering, click the button below to save the data set ",
