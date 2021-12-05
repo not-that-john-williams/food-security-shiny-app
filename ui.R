@@ -121,7 +121,7 @@ shinyUI(navbarPage(
         ),
         
         #First Paragraph - Purpose of the app
-        "Would you believe over ,", a(href=USDALink, "38 million Americans"),
+        "Would you believe over ", a(href=USDALink, "38 million Americans"),
         ", including almost 12 million children, were food insecure in 2020?  ",
         "Someone who faces food insecurity is regularly unable to secure ",
         "financial resources for food at the household level.  Food ",
