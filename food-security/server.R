@@ -760,7 +760,8 @@ shinyServer(function(input, output, session) {
     saveRDS(treeFit, "./Fitted Models/classification-tree-model.rds")
     
     # Output a plot of the Classification Tree
-    treeSummary <- rattle::fancyRpartPlot(treeFit$finalModel, tweak = 2)
+    treeSummary <- "treeFit <- readRDS('./Fitted Models/classification-tree-model.rds'); 
+                    rattle::fancyRpartPlot(treeFit$finalModel, tweak = 2)"
     
     treeModelPredict <- predict(treeFit, newdata = testData.tree)
     treeFitStats <- confusionMatrix(treeModelPredict, 
@@ -776,7 +777,7 @@ shinyServer(function(input, output, session) {
   })
   
   output$summaryTree <- renderPlot({
-    trainTreeModel()$summary
+    eval(parse(text = trainTreeModel()$summary))
   })
   
   output$treeFitStats <- renderPrint({
